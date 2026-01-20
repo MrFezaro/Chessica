@@ -1,0 +1,5 @@
+Version: 17.1, Windows
+Commit: 03e27488f3d21d8ff4dbf3065603afa21dbd0ef3
+
+Build: stockfish-windows-x86-64-vnni512
+Checksum: N/A provided on Github 

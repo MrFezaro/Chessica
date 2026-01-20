@@ -1,0 +1,6 @@
+En Croissant GUI for Stockfish
+
+Version: 0.12.2, Windows
+Commit: a9bfbfd5f89a00be5799d2f952e94c61762d83ff
+File: en-croissant_0.12.2_x64-setup.exe 
+Checksum: sha256:235625dbcc4102f457e0342ee3b8768eb785736da2a988d1c87d42e6eaa5bd8c
