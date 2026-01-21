@@ -3,6 +3,8 @@ import chess.engine
 import chess.pgn
 
 engine = chess.engine.SimpleEngine.popen_uci(r"C:/_dev/Chessica/Thinker/stockfish-windows-x86-64-avx2/stockfish-windows-x86-64-avx2.exe")
+#How deep should the engine explore, e.g. how many steps in the future.
+engine.options["Depth"] = 2
 
 timePerMove = 0.01 #seconds, exact search time
 
