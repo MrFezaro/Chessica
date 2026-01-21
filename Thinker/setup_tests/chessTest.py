@@ -2,7 +2,7 @@ import chess
 import chess.engine
 import chess.pgn
 
-engine = chess.engine.SimpleEngine.popen_uci(r"C:\_dev\Chessica\Thinker\stockfish-windows-x86-64-avx2\stockfish-windows-x86-64-avx2.exe")
+engine = chess.engine.SimpleEngine.popen_uci(r"C:/_dev/Chessica/Thinker/stockfish-windows-x86-64-avx2/stockfish-windows-x86-64-avx2.exe")
 
 timePerMove = 0.01 #seconds, exact search time
 
