@@ -1,3 +1,4 @@
+#USE PYTHON 3.13.11
 #Based off https://github.com/FreeOpcUa/opcua-asyncio/blob/master/examples/server-minimal.py
 
 import asyncio
@@ -13,7 +14,7 @@ async def main():
     await server.init()
 
     # Set up the server's endpoint
-    server.set_endpoint("opc.tcp://0.0.0.0:4841/chessica")
+    server.set_endpoint("opc.tcp://localhost:4840/chessica")
 
     # Set up the server's namespace
     uri = "http://opcua.chessica.io"
@@ -24,22 +25,23 @@ async def main():
     runtimeVar = await comms.add_variable(idx, "runtime", -1.0)
     await runtimeVar.set_writable(False) #Readonly by clients
 
-    readyVar = await comms.add_variable(idx, "ready", False)
+    readyVar = await comms.add_variable(idx, "ready", True)
     await readyVar.set_writable(True) #Read/write by clients
 
     #Main loop for server. Preferably this would be in some sort of update function in a real program.
     _logger.info("Starting server!")
     async with server:
         while True:
-            await runtimeVar.write_value(await runtimeVar.get_value() + 0.1)
-            print(f"Runtime: {await runtimeVar.read_value()}")
+            await runtimeVar.write_value(await runtimeVar.get_value() + 1)
+            print(f"yips: {await runtimeVar.read_value()}")
 
-            if(await readyVar.get_value()):
-                await readyVar.write_value(False)
+            if(not await readyVar.get_value()): #ready variable got set to False -> become busy
                 print("Executing next move!")
+                await asyncio.sleep(2.0)
+                await readyVar.write_value(True)
 
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(1.0)
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG)
-    asyncio.run(main(), debug=True)
+    logging.basicConfig(level=logging.ERROR)
+    asyncio.run(main(), debug=False)
