@@ -1,37 +1,45 @@
-#Based off https://github.com/FreeOpcUa/opcua-asyncio/blob/master/examples/sync/server-minimal.py
+#Based off https://github.com/FreeOpcUa/opcua-asyncio/blob/master/examples/server-minimal.py
 
-import time
-from asyncua.sync import Server
+import asyncio
+import logging
 
-server = Server()
+from asyncua import Server, ua
+from asyncua.common.methods import uamethod
 
-# Set up the server's endpoint
-server.set_endpoint("opc.tcp://localhost:4840/freeopcua/server/")
+async def main():
+    _logger = logging.getLogger(__name__)
 
-# Set up the server's namespace
-uri = "http://opcua.chessica.io"
-idx = server.register_namespace(uri)
+    server = Server()
+    await server.init()
 
-comms = server.nodes.objects.add_object(idx, "Comms")
-runtimeVar = comms.add_variable(idx, "runtime", -1.0)
-runtimeVar.set_writable(False) #Readonly by clients
+    # Set up the server's endpoint
+    server.set_endpoint("opc.tcp://0.0.0.0:4841/chessica")
 
-readyVar = comms.add_variable(idx, "ready", False)
-readyVar.set_writable(True) #Read/write by clients
+    # Set up the server's namespace
+    uri = "http://opcua.chessica.io"
+    idx = await server.register_namespace(uri)
+    print(f"NAMESPACE idx: {idx}")
 
-server.start()
+    comms = await server.nodes.objects.add_object(idx, "Comms")
+    runtimeVar = await comms.add_variable(idx, "runtime", -1.0)
+    await runtimeVar.set_writable(False) #Readonly by clients
 
-#Main loop for server. Preferably this would be in some sort of update function in a real program.
-try:
-    while True:
-        runtimeVar.write_value(runtimeVar.get_value() + 0.1)
-        print(f"Runtime: {runtimeVar.read_value()}")
+    readyVar = await comms.add_variable(idx, "ready", False)
+    await readyVar.set_writable(True) #Read/write by clients
 
-        if(readyVar.get_value()):
-            readyVar.write_value(False)
-            print("Executing next move!")
+    #Main loop for server. Preferably this would be in some sort of update function in a real program.
+    _logger.info("Starting server!")
+    async with server:
+        while True:
+            await runtimeVar.write_value(await runtimeVar.get_value() + 0.1)
+            print(f"Runtime: {await runtimeVar.read_value()}")
 
-        time.sleep(0.1)
-finally:
-    print("Server stopping. Intentional?")
-    server.stop()
+            if(await readyVar.get_value()):
+                await readyVar.write_value(False)
+                print("Executing next move!")
+
+            await asyncio.sleep(0.1)
+
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.DEBUG)
+    asyncio.run(main(), debug=True)
