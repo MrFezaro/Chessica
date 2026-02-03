@@ -1,3 +1,6 @@
 .vscode/
 .venv/
 __pycache__/
+
+ #To avoid spam, these are generated
+Games/

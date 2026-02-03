@@ -14,6 +14,7 @@ moveBuffer = ""
 board = chess.Board()
 while not board.is_game_over():
     result = engine.play(board, chess.engine.Limit(time=timePerMove), info=chess.engine.INFO_NONE)
+    print(result.move.uci())
     board.push(result.move)
 
 game = chess.pgn.Game.from_board(board)

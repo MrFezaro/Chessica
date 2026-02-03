@@ -1,6 +1,7 @@
 import chess
 import chess.engine
 import chess.pgn
+from pathlib import Path
 
 class Brain:
     _engine : chess.engine.SimpleEngine = chess.engine.SimpleEngine.popen_uci(r"C:/_dev/Chessica/Thinker/stockfish-windows-x86-64-avx2/stockfish-windows-x86-64-avx2.exe")
@@ -31,7 +32,7 @@ class Brain:
         if(result.move == None):
             return "0000" #Null move
         else:
-            return result.move
+            return result.move.uci()
 
     #Checks if the game is complete.
     #If true is returned, it automatically stops the engine.
@@ -46,7 +47,9 @@ class Brain:
         game = chess.pgn.Game.from_board(self._board)
         game.headers["Event"] = eventName
         game.headers["Date"] = dateTime
-        print(game, file=open(f"./Thinker/Games/{filename}.pgn", "w"), end="\n\n")
+
+        Path("./Thinker/Games/").mkdir(parents=True, exist_ok=True)
+        print(game, file=open(f"./Thinker/Games/{filename}.pgn", "x"), end="\n\n")
         return
 pass
 
