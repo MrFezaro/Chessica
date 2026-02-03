@@ -34,6 +34,54 @@ class Brain:
         else:
             return result.move.uci()
 
+    ###!WARNING!   WIP - UNTESTED   ###
+    #Deduces the chess move made by the opponent by comparing the newBoard to the previous board (in memory).
+    #In fancy terms, it acquires the delta of the boards.
+    def deduceOpponentMove(self, newBoard : chess.Board) -> chess.Move:
+        #Figure out how to get the delta
+        #A piece ALWAYS has to vanish from one square and appear on another
+        #If a piece has moved: sum of pieces remains the same. 
+        # - 1 previously filled tile is empty, 1 previously empty is filled.
+        #If a piece has attacked: sum of pieces is one less
+        # - 1 previously filled tile is empty, 1 tile has changed piece colors.
+        newMap = newBoard.piece_map()
+        map = self._board.piece_map()
+        
+        move : chess.Move = None
+        piece : chess.Piece = None
+        wasAttack = False
+
+        #file: a - h (y)
+        #rank: 1 - 8 (x)
+        currentSquare = 0
+
+        #Calculate deltamove
+        #TODO: Deduce castling! (king switches places with tower/rook)
+        #TODO: Deduce promotion! (pawn reaches end of board)
+        for square in range(chess.H8): #H8 = 63, last tile
+            if(map[square] != newMap[square]):
+                new : chess.Piece = newMap[square]
+                old : chess.Piece= map[square]
+
+                wasAttack = new.color != old.color #Consider passing this to PLC?
+
+                if(old != None and new == None): #Moved from
+                    move.from_square = square
+                elif((old == None and new != None) or wasAttack): #Moved to OR attacked
+                    move.to_square = square
+                
+                if(move.from_square != -1 and move.to_square != -1):
+                    piece = new
+                    break
+
+        return move
+
+    #Forces a move onto the board. 
+    #Usually this is used for updating the board in response to deducing an opponent's move.
+    def applyMove(self, move : chess.Move) -> None:
+        self._board.push(move)
+        return
+
     #Checks if the game is complete.
     #If true is returned, it automatically stops the engine.
     def gameComplete(self) -> bool:

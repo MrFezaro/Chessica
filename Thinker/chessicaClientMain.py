@@ -37,7 +37,11 @@ async def main():
         
         while not chessimind.gameComplete():
 
-            if(await nodeReady.read_value()): #Awaits PLC to give a ready signal before doing next move
+            #Awaits PLC to give a ready signal before deducing opponent's move and executing own move
+            if(await nodeReady.read_value()):
+                newBoard = chessimind._board #PLACEHOLDER! Will be replaced with camera vision
+                chessimind.applyMove(chessimind.deduceOpponentMove(newBoard)) #Handle opponent's turn
+
                 move = chessimind.makeMove()
                 
                 await nodeMoveInput.write_value(move)
@@ -48,11 +52,11 @@ async def main():
                 await asyncio.sleep(0.1)
                 await nodeMoveExecute.write_value(False)
                 await asyncio.sleep(0.1)
-
                 continue
-            #else:
-                #Figure out how to input commands and put stockfish on pause
+            else:
+                #Figure out how to input commands to forcefeed commands
                 #inputCommand(async_input())
+                pass
         
         chessimind.printBoard(
             f"Game {datetime.datetime.today().strftime("%Y-%m-%d, %H-%M-%S")}",
