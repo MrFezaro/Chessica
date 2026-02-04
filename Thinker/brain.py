@@ -5,34 +5,39 @@ from pathlib import Path
 
 class Brain:
     _engine : chess.engine.SimpleEngine = chess.engine.SimpleEngine.popen_uci(r"C:/_dev/Chessica/Thinker/stockfish-windows-x86-64-avx2/stockfish-windows-x86-64-avx2.exe")
-    _board : chess.Board = None
+    board : chess.Board = None
     #How deep should the engine explore, e.g. how many steps in the future.
 
     timePerMove = 0.01 #In seconds
 
     def __init__(self, searchDepth : int, initialBoard : chess.Board):
         self._engine.options["Depth"] = searchDepth
-        self._board = initialBoard
+        self.board = initialBoard
         return
 
-    #TODO find out how to play against a human, and decide if the robor is white or black
     #param ponder: Whether the engine should keep running in the background when awaiting its turn.
     #param newBoard: A new board to pass, for example when it turns out opponent did an invalid move and go along with it. If none, keeps using the same board.
-    #
+    #returns: A string formatted as UCI, with an appended 'q' if promotion and appended 'x' if piece got taken.
     def makeMove(self, ponder : bool = False) -> str:
-        result = self._engine.play(
-            self._board,
+        playResult = self._engine.play(
+            self.board,
             chess.engine.Limit(time=self.timePerMove),
             info = chess.engine.INFO_NONE,
             ponder = ponder,
             )
         
-        self._board.push(result.move)
+        self.board.push(playResult.move)
 
-        if(result.move == None):
+        moveResult : str = playResult.move.uci()
+
+        print(f"Supposed capture: {playResult.move.uci()}")
+        if(playResult.move != None and self.board.is_capture(playResult.move)):
+            moveResult += "x"
+
+        if(playResult.move == None):
             return "0000" #Null move
         else:
-            return result.move.uci()
+            return moveResult
 
     ###!WARNING!   WIP - UNTESTED   ###
     #Deduces the chess move made by the opponent by comparing the newBoard to the previous board (in memory).
@@ -45,28 +50,28 @@ class Brain:
         #If a piece has attacked: sum of pieces is one less
         # - 1 previously filled tile is empty, 1 tile has changed piece colors.
         newMap = newBoard.piece_map()
-        map = self._board.piece_map()
+        map = self.board.piece_map()
         
-        move : chess.Move = None
-        piece : chess.Piece = None
+        move : chess.Move = chess.Move.null()
         wasAttack = False
-
-        #file: a - h (y)
-        #rank: 1 - 8 (x)
-        currentSquare = 0
 
         #Calculate deltamove
         #TODO: Deduce castling! (king switches places with tower/rook)
         #TODO: Deduce promotion! (pawn reaches end of board)
+        #TODO: Deduce en passant (low priority)
         for square in range(chess.H8): #H8 = 63, last tile
-            if(map[square] != newMap[square]):
-                new : chess.Piece = newMap[square]
-                old : chess.Piece= map[square]
+            new : chess.Piece = None
+            if(square in newMap): new = newMap[square]
 
-                wasAttack = new.color != old.color #Consider passing this to PLC?
+            old : chess.Piece = None
+            if(square in map): old = map[square]
+
+            if(old != new):
+                wasAttack = (old != None and new != None) and (new.color != old.color)
 
                 if(old != None and new == None): #Moved from
                     move.from_square = square
+
                 elif((old == None and new != None) or wasAttack): #Moved to OR attacked
                     move.to_square = square
                 
@@ -76,23 +81,22 @@ class Brain:
 
         return move
 
-    #Forces a move onto the board. 
-    #Usually this is used for updating the board in response to deducing an opponent's move.
+    #Applies a move to he board
     def applyMove(self, move : chess.Move) -> None:
-        self._board.push(move)
+        self.board.push(move)
         return
 
     #Checks if the game is complete.
     #If true is returned, it automatically stops the engine.
     def gameComplete(self) -> bool:
-        b = self._board.is_game_over()
+        b = self.board.is_game_over()
         if(b):
             self._engine.quit()
             print("Game Complete")
         return b
     
     def printBoard(self, filename : str, eventName : str, dateTime : str) -> None:
-        game = chess.pgn.Game.from_board(self._board)
+        game = chess.pgn.Game.from_board(self.board)
         game.headers["Event"] = eventName
         game.headers["Date"] = dateTime
 
