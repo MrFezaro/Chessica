@@ -27,17 +27,24 @@ class Brain:
             )
         
         self.board.push(playResult.move)
+        return self.toCustomUci(playResult.move)
+        
+    #Parses the move into custom UCI for better PLC friendliness by appending characters
+    #q - promotion (non-queen promotions unsupported, built into standard UCI)
+    #x - capture at end position
+    #p - en passant
+    #c - castling
+    def toCustomUci(self, move : chess.Move) -> str:
+        moveResult : str = move.uci()
 
-        moveResult : str = playResult.move.uci()
-
-        print(f"Supposed capture: {playResult.move.uci()}")
-        if(playResult.move != None and self.board.is_capture(playResult.move)):
+        print(f"Supposed capture: {move.uci()}")
+        if(move != None and self.board.is_capture(move)):
             moveResult += "x"
 
-        if(playResult.move == None):
+        if(move == None):
             return "0000" #Null move
-        else:
-            return moveResult
+
+        return moveResult
 
     ###!WARNING!   WIP - UNTESTED   ###
     #Deduces the chess move made by the opponent by comparing the newBoard to the previous board (in memory).

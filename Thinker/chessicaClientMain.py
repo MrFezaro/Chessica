@@ -32,6 +32,20 @@ async def main():
     #
     #--- inner func zone! ---
     #
+
+    async def sendMove(move : str) -> None:
+        await nodeMoveInput.write_value(move)
+        await nodeReady.write_value(False) #PLC WILL be busy, and to ensure only 1 move is sent.
+        return
+
+    #Sends a short pulse to the MoveExecute node, which makes the PLC act upon MoveInput
+    async def sendExecute() -> None:
+        await nodeMoveExecute.write_value(True)
+        await asyncio.sleep(0.1)
+        await nodeMoveExecute.write_value(False)
+        await asyncio.sleep(0.1)
+        return
+
     #Commands:
     #move [uci move]
     #ready [optional y/n]
@@ -39,7 +53,17 @@ async def main():
     #history | aliases: h, hist
     async def inputCommand(input : str) -> None:
         cmd : list[str] = input.lower().split(" ")
-        #Input move command
+        if(cmd[0] == "h" or cmd[0] == "help"):
+            print("""✨ Chessica - Clever Linearized Intelligience (CLI) ✨
+help \t\t| @grok what is this           
+move [move] \t| Supposed to represent opponent moves. Assigns UCI move to board stack. If no parameters provided: outputs latest move with the team color.  
+execute [move] \t| Alias: exec | Supposed to represent Chessica moves. Assigns move to OPC-UA MoveInput node. Chessica will remember this. If no parameters provided: sends latest move to PLC. 
+ready [y/n] \t| Assigns True/False to the OPC-UA Ready node. If no parameters provided: outputs node's current status.               
+reset \t\t| Resets the board to its default state.               
+history [wrap] \t| Alias: hist | Displays the entire move history of the current board. Optionally wraps output to [wrap] (int)
+            """)
+            return
+
         if(cmd[0] == "move"):
             if(len(cmd) == 1):
                 whiteTurn = len(chessimind.board.move_stack) % 2 == 0
@@ -74,11 +98,11 @@ async def main():
             chessimind.board = chess.Board()
             return
         
-        if(cmd[0] == "history" or cmd[0] == "h" or cmd[0] == "hist"):
+        if(cmd[0] == "history" or cmd[0] == "hist"):
             wrap = 8
             if(len(cmd) > 1 and cmd[1] != ""):
                 if(cmd[1].isdigit()):
-                    wrap = abs(cmd[1])
+                    wrap = abs(int(cmd[1]))
                 elif(cmd[1]):
                     print(f"Invalid wrap number. Defaulting to {wrap}")
                 
@@ -99,7 +123,23 @@ async def main():
             print(toPrint)
             return
 
-        print("Not a recognized command. Did you mistype?")
+        if(cmd[0] == "execute" or cmd[0] == "exec"):
+            try:
+                move : chess.Move = chess.Move.from_uci(cmd[1])
+            except chess.InvalidMoveError as err:
+                print(f"{err}: Invalid move format. Expected UCI format: xnym")
+                return
+            
+            if(chessimind.board.is_legal(move)):
+                chessimind.applyMove(move)
+                customUci = chessimind.toCustomUci(move)
+                await sendMove(customUci)
+                await sendExecute()
+            else:
+                print(f"Illegal move! Not executing.")            
+            return
+
+        print("Not a recognized command. Did you mistype? Type 'help' or 'h' for help.")
     #
     #--- no more func ---
     #
@@ -130,15 +170,8 @@ async def main():
                 #chessimind.applyMove(chessimind.deduceOpponentMove(newBoard)) #Handle opponent's turn
 
                 move = chessimind.makeMove()
-                
-                await nodeMoveInput.write_value(move)
-                await nodeReady.write_value(False) #PLC WILL be busy, and to ensure only 1 move is sent.
-
-                #Send rising edge pulse
-                await nodeMoveExecute.write_value(True)
-                await asyncio.sleep(0.1)
-                await nodeMoveExecute.write_value(False)
-                await asyncio.sleep(0.1)
+                sendMove(move)
+                sendExecute()
                 continue
             else:
                 await inputCommand(await async_input("chessica >"))
