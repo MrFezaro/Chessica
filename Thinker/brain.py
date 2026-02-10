@@ -30,10 +30,11 @@ class Brain:
         return self.toCustomUci(playResult.move)
         
     #Parses the move into custom UCI for better PLC friendliness by appending characters
-    #q - promotion (non-queen promotions unsupported, built into standard UCI)
-    #x - capture at end position
-    #p - en passant
-    #c - castling
+    #q - promotion (non-queen promotions unsupported, built into standard UCI) (non-attack promotion) TODO
+    #Q - promotion with capture TODO
+    #x - capture at end position (attack) TODO
+    #p - en passant (special capture) TODO
+    #c - castling (swap) TODO
     def toCustomUci(self, move : chess.Move) -> str:
         moveResult : str = move.uci()
 
