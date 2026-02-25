@@ -39,11 +39,8 @@ async def main():
         await nodeReady.write_value(False) #PLC WILL be busy, and to ensure only 1 move is sent.
         return
 
-    #Sends a short pulse to the MoveExecute node, which makes the PLC act upon MoveInput
     async def sendExecute() -> None:
         await nodeMoveExecute.write_value(True)
-        await asyncio.sleep(0.1)
-        await nodeMoveExecute.write_value(False)
         await asyncio.sleep(0.1)
         return
 
@@ -59,7 +56,7 @@ async def main():
 help \t\t| @grok what is this           
 move [move] \t| Supposed to represent opponent moves. Assigns UCI move to board stack. If no parameters provided: outputs latest move with the team color.  
 execute [move] \t| Alias: exec | Supposed to represent Chessica moves. Assigns move to OPC-UA MoveInput node. Chessica will remember this. If no parameters provided: sends latest move to PLC. 
-ready [y/n] \t| Alias: r | Assigns True/False to the OPC-UA Ready node. If no parameters provided: outputs node's current status.               
+ready [y/n] \t | Assigns True/False to the OPC-UA Ready node, forcing PLC to appear ready. If no parameters provided: outputs node's current status.               
 reset \t\t| Resets the board to the standard chess setup.               
 history [wrap] \t| Alias: hist | Displays the entire move history of the current board. Optionally wraps output to [wrap] (int)
 load [abs_filepath] \t | Loads a board from a .pgn file. Path is absolute.
@@ -85,7 +82,7 @@ load [abs_filepath] \t | Loads a board from a .pgn file. Path is absolute.
                 print(f"Illegal move!")
             return
         
-        if(cmd[0] == "ready" or cmd[0] == "r"):
+        if(cmd[0] == "ready"):
             if(len(cmd) == 1):
                 print(await nodeReady.read_value())
                 return
