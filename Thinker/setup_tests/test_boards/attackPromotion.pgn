@@ -1,4 +1,5 @@
 [FEN "k2nr3/3P4/8/8/8/8/8/7K w KQkq - 0 1"]
 
+%TEST: Expect Q at end of custom UCI
 %Custom UCI: Done
 %Robot Movement: 
