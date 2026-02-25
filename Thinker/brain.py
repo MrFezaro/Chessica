@@ -26,10 +26,13 @@ class Brain:
             ponder = ponder,
             )
         
+        out = self.toCustomUci(playResult.move)
         self.board.push(playResult.move)
-        return self.toCustomUci(playResult.move)
+        return out
         
-    #Parses the move into custom UCI for better PLC friendliness by appending characters
+    #Parses the move into custom UCI for better PLC friendliness by appending characters.
+    #This uses the current board state to determine the move type. As calling it after a board update will result
+    #in weird results.
     #q - promotion (non-queen promotions unsupported, built into standard UCI) (non-attack promotion) TODO
     #Q - promotion with capture TODO
     #x - capture at end position (attack) TODO
@@ -38,13 +41,22 @@ class Brain:
     def toCustomUci(self, move : chess.Move) -> str:
         moveResult : str = move.uci()
 
-        print(f"Supposed capture: {move.uci()}")
-        if(move != None and self.board.is_capture(move)):
-            moveResult += "x"
-
         if(move == None):
             return "0000" #Null move
+        
+        if(self.board.is_en_passant(move)):
+            moveResult += "p"
 
+        elif(self.board.is_capture(move)):
+            if(moveResult[-1] == "q"): #Replace standard UCI promotion mark with attack promotion mark
+                moveResult = moveResult.replace("q", "Q")
+            else:
+                moveResult += "x"
+        elif(self.board.is_castling(move)):
+            moveResult += "c"
+        
+
+        print(f"Custom UCI: {moveResult}")
         return moveResult
 
     ###!WARNING!   WIP - UNTESTED   ###
@@ -103,6 +115,17 @@ class Brain:
             print("Game Complete")
         return b
     
+    #Returns whether loading succeeded
+    def loadBoard(self, filename : str) -> bool:
+        try:
+            pgn = open(filename)
+            self.board = chess.pgn.read_game(pgn).board()
+            return self.board != None
+        except OSError as err:
+            print(f"Cannot open file '{filename}'. Error: {err}")
+
+        return False
+
     def printBoard(self, filename : str, eventName : str, dateTime : str) -> None:
         game = chess.pgn.Game.from_board(self.board)
         game.headers["Event"] = eventName

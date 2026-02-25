@@ -1,6 +1,7 @@
 #USE PYTHON 3.13.11
 #Client with virtual PLC as server
 
+import inspect
 import datetime
 import asyncio
 import chess
@@ -58,9 +59,10 @@ async def main():
 help \t\t| @grok what is this           
 move [move] \t| Supposed to represent opponent moves. Assigns UCI move to board stack. If no parameters provided: outputs latest move with the team color.  
 execute [move] \t| Alias: exec | Supposed to represent Chessica moves. Assigns move to OPC-UA MoveInput node. Chessica will remember this. If no parameters provided: sends latest move to PLC. 
-ready [y/n] \t| Assigns True/False to the OPC-UA Ready node. If no parameters provided: outputs node's current status.               
-reset \t\t| Resets the board to its default state.               
+ready [y/n] \t| Alias: r | Assigns True/False to the OPC-UA Ready node. If no parameters provided: outputs node's current status.               
+reset \t\t| Resets the board to the standard chess setup.               
 history [wrap] \t| Alias: hist | Displays the entire move history of the current board. Optionally wraps output to [wrap] (int)
+load [abs_filepath] \t | Loads a board from a .pgn file. Path is absolute.
             """)
             return
 
@@ -83,14 +85,14 @@ history [wrap] \t| Alias: hist | Displays the entire move history of the current
                 print(f"Illegal move!")
             return
         
-        if(cmd[0] == "ready"):
+        if(cmd[0] == "ready" or cmd[0] == "r"):
             if(len(cmd) == 1):
                 print(await nodeReady.read_value())
                 return
             
             shouldReady = cmd[1][0] == "y" and not cmd[1][0] == "n"
             await nodeReady.write_value(shouldReady)
-            print(f"ready is {shouldReady}")
+            print(f"ready set to {shouldReady}")
             return
     
         if(cmd[0] == "reset"):
@@ -124,6 +126,12 @@ history [wrap] \t| Alias: hist | Displays the entire move history of the current
             return
 
         if(cmd[0] == "execute" or cmd[0] == "exec"):
+            if(len(cmd) == 1):
+                customUci = chessimind.toCustomUci(chessimind.board.peek())
+                await sendMove(customUci)
+                await sendExecute()
+                return
+            
             try:
                 move : chess.Move = chess.Move.from_uci(cmd[1])
             except chess.InvalidMoveError as err:
@@ -131,12 +139,26 @@ history [wrap] \t| Alias: hist | Displays the entire move history of the current
                 return
             
             if(chessimind.board.is_legal(move)):
-                chessimind.applyMove(move)
                 customUci = chessimind.toCustomUci(move)
+                chessimind.applyMove(move)
                 await sendMove(customUci)
                 await sendExecute()
             else:
                 print(f"Illegal move! Not executing.")            
+            return
+        
+        if(cmd[0] == "load"):
+            if(len(cmd) == 1):
+                print("No filepath provided")
+                return
+            
+            if(not cmd[1].endswith(".pgn")):
+                print("Not a recognized .pgn file!")
+
+            boardFilePath = cmd[1]
+            success = chessimind.loadBoard(boardFilePath)
+            if(success):
+                print("Board loaded")
             return
 
         print("Not a recognized command. Did you mistype? Type 'help' or 'h' for help.")
@@ -170,8 +192,8 @@ history [wrap] \t| Alias: hist | Displays the entire move history of the current
                 #chessimind.applyMove(chessimind.deduceOpponentMove(newBoard)) #Handle opponent's turn
 
                 move = chessimind.makeMove()
-                sendMove(move)
-                sendExecute()
+                await sendMove(move)
+                await sendExecute()
                 continue
             else:
                 await inputCommand(await async_input("chessica >"))
