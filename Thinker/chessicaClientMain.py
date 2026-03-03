@@ -35,13 +35,12 @@ async def main():
     #
 
     async def sendMove(move : str) -> None:
+        print(f"Made move: {move}")
         await nodeMoveInput.write_value(move)
-        await nodeReady.write_value(False) #PLC WILL be busy, and to ensure only 1 move is sent.
         return
 
     async def sendExecute() -> None:
         await nodeMoveExecute.write_value(True)
-        await asyncio.sleep(0.1)
         return
 
     #Commands:
@@ -67,19 +66,28 @@ load [abs_filepath] \t | Loads a board from a .pgn file. Path is absolute.
             if(len(cmd) == 1):
                 whiteTurn = len(chessimind.board.move_stack) % 2 == 0
                 team = "White"
-                if(whiteTurn): team = "Black"
-                print(f"Last move: {chessimind.board.peek()} ({team})")
-                return
-            try:
-                move : chess.Move = chess.Move.from_uci(cmd[1])
-            except chess.InvalidMoveError as err:
-                print(f"{err}: Invalid move format. Expected UCI format: xnym")
-                return
-            
-            if(chessimind.board.is_legal(move)):
-                chessimind.applyMove(move)
+                if(whiteTurn): 
+                    team = "Black"
+
+                try:
+                    print(f"Last move: {chessimind.board.peek()} ({team})")
+                except:
+                    print(f"No moves yet.")
+
             else:
-                print(f"Illegal move!")
+                try:
+                    move : chess.Move = chess.Move.from_uci(cmd[1])
+                except chess.InvalidMoveError as err:
+                    print(f"{err}: Invalid move format. Expected UCI format: xnym")
+
+                    return
+                
+                if(chessimind.board.is_legal(move)):
+                    chessimind.applyMove(move)
+                    print(f"Move added: {move}")
+                else:
+                    print(f"Illegal move!")
+
             return
         
         if(cmd[0] == "ready"):
@@ -123,10 +131,15 @@ load [abs_filepath] \t | Loads a board from a .pgn file. Path is absolute.
             return
 
         if(cmd[0] == "execute" or cmd[0] == "exec"):
-            if(len(cmd) == 1):
-                customUci = chessimind.toCustomUci(chessimind.board.peek())
-                await sendMove(customUci)
-                await sendExecute()
+            try:
+                if(len(cmd) == 1):
+                    #BUG: the customUCI gets executed as a move on the CURRENT board, rather than PREVIOUS!
+                    customUci = chessimind.toCustomUci(chessimind.board.peek())
+                    await sendMove(customUci)
+                    await sendExecute()
+                    return
+            except:
+                print(f"No move to execute")
                 return
             
             try:
@@ -174,10 +187,13 @@ load [abs_filepath] \t | Loads a board from a .pgn file. Path is absolute.
 
         chessimind = brain.Brain(BOT_DEPTH, initialChessBoard)
 
+        coldboot : bool = True
+        prevReady : bool = False
         while not chessimind.gameComplete():
 
             #Awaits PLC to give a ready signal before deducing opponent's move and executing own move
-            if(await nodeReady.read_value()):
+            #Only on rising edge
+            if(not coldboot and await nodeReady.read_value() and not prevReady):
                 #Opponent deduction is a heavy todo. Handling delta must be solved.
                 #Example of funky case:
                 #ready y | 0000 -> e7e5
@@ -194,8 +210,10 @@ load [abs_filepath] \t | Loads a board from a .pgn file. Path is absolute.
                 continue
             else:
                 await inputCommand(await async_input("chessica >"))
+                coldboot = False
                 pass
 
+            prevReady = await nodeReady.read_value()
             pass
         
         chessimind.printBoard(

@@ -55,8 +55,6 @@ class Brain:
         elif(self.board.is_castling(move)):
             moveResult += "c"
         
-
-        print(f"Custom UCI: {moveResult}")
         return moveResult
 
     ###!WARNING!   WIP - UNTESTED   ###
