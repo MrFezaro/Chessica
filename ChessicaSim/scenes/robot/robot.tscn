@@ -1,40 +1,24 @@
 [gd_scene format=3 uid="uid://c3oqats8qf56d"]
 
 [ext_resource type="PackedScene" uid="uid://bh3nlxa5yxur6" path="res://assets/UR7e/UR7e.glb" id="1_eh0qr"]
-
-[sub_resource type="JointLimitationCone3D" id="JointLimitationCone3D_eh0qr"]
-angle = 0.0
+[ext_resource type="Script" uid="uid://bw6xcnb8bixfr" path="res://scenes/robot/Robot.gd" id="2_ay6cs"]
 
 [sub_resource type="JointLimitationCone3D" id="JointLimitationCone3D_ay6cs"]
 angle = 0.0
 
-[node name="UR5e" unique_id=1525803619 instance=ExtResource("1_eh0qr")]
+[sub_resource type="JointLimitationCone3D" id="JointLimitationCone3D_weiqw"]
+angle = 0.0
+
+[node name="UR5e2" unique_id=1287074816 instance=ExtResource("1_eh0qr")]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0)
+script = ExtResource("2_ay6cs")
 
-[node name="UR7e endpoint" parent="Armature" parent_id_path=PackedInt32Array(683832559) index="0" unique_id=1874631883]
-visible = false
+[node name="Target" type="Marker3D" parent="." index="0" unique_id=1455791368]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, -5.003685, -8.408472)
 
-[node name="UR7e l1" parent="Armature" parent_id_path=PackedInt32Array(683832559) index="1" unique_id=763241975]
-visible = false
-
-[node name="UR7e l2" parent="Armature" parent_id_path=PackedInt32Array(683832559) index="2" unique_id=592916772]
-visible = false
-
-[node name="UR7e l3" parent="Armature" parent_id_path=PackedInt32Array(683832559) index="3" unique_id=1601307125]
-visible = false
-
-[node name="UR7e l4" parent="Armature" parent_id_path=PackedInt32Array(683832559) index="4" unique_id=46713143]
-visible = false
-
-[node name="UR7e l5" parent="Armature" parent_id_path=PackedInt32Array(683832559) index="5" unique_id=863900201]
-visible = false
-
-[node name="UR7e socket" parent="Armature" parent_id_path=PackedInt32Array(683832559) index="6" unique_id=2140675844]
-visible = false
-
-[node name="CCDIK3D" type="CCDIK3D" parent="Armature/Skeleton3D" parent_id_path=PackedInt32Array(1799747530) index="0" unique_id=142159809]
+[node name="CCDIK3D" type="CCDIK3D" parent="Armature/Skeleton3D" parent_id_path=PackedInt32Array(1213835853) index="0" unique_id=1591227731]
 max_iterations = 40
-angular_delta_limit = 0.0017453292519943296
+angular_delta_limit = 0.01745329251994329
 setting_count = 1
 settings/0/target_node = NodePath("../../../Target")
 settings/0/root_bone_name = "J2"
@@ -48,13 +32,13 @@ settings/0/joints/0/limitation = null
 settings/0/joints/1/rotation_axis = 2
 settings/0/joints/1/limitation = null
 settings/0/joints/2/rotation_axis = 0
-settings/0/joints/2/limitation = SubResource("JointLimitationCone3D_eh0qr")
+settings/0/joints/2/limitation = SubResource("JointLimitationCone3D_ay6cs")
 settings/0/joints/2/limitation/right_axis = 0
 settings/0/joints/2/limitation/rotation_offset = Quaternion(0, 0, 0, 1)
 settings/0/joints/3/rotation_axis = 2
 settings/0/joints/3/limitation = null
 settings/0/joints/4/rotation_axis = 2
-settings/0/joints/4/limitation = SubResource("JointLimitationCone3D_ay6cs")
+settings/0/joints/4/limitation = SubResource("JointLimitationCone3D_weiqw")
 settings/0/joints/4/limitation/right_axis = 0
 settings/0/joints/4/limitation/rotation_offset = Quaternion(0, 0, 0, 1)
 settings/0/joints/5/rotation_axis = 2
@@ -63,6 +47,3 @@ settings/0/joints/6/rotation_axis = 2
 settings/0/joints/6/limitation = null
 settings/0/joints/7/rotation_axis = 2
 settings/0/joints/7/limitation = null
-
-[node name="Target" type="Marker3D" parent="." index="1" unique_id=1455791368]
-transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -0.90713716, -6.39267, -4.8225794)
