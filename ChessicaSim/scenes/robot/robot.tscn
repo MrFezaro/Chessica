@@ -1,0 +1,39 @@
+[gd_scene format=3 uid="uid://c3oqats8qf56d"]
+
+[ext_resource type="PackedScene" uid="uid://bh3nlxa5yxur6" path="res://assets/UR7e/UR7e.glb" id="1_eh0qr"]
+
+[node name="UR5e" unique_id=80765117 instance=ExtResource("1_eh0qr")]
+
+[node name="CCDIK3D" type="CCDIK3D" parent="Skeleton3D" parent_id_path=PackedInt32Array(103268979) index="7" unique_id=334438833]
+max_iterations = 10
+setting_count = 1
+settings/0/target_node = NodePath("../../Target")
+settings/0/root_bone_name = "Bone"
+settings/0/root_bone = 8
+settings/0/end_bone_name = "Bone.010_leaf"
+settings/0/end_bone = 17
+settings/0/extend_end_bone = false
+settings/0/joint_count = 10
+settings/0/joints/0/rotation_axis = 1
+settings/0/joints/0/limitation = null
+settings/0/joints/1/rotation_axis = 1
+settings/0/joints/1/limitation = null
+settings/0/joints/2/rotation_axis = 1
+settings/0/joints/2/limitation = null
+settings/0/joints/3/rotation_axis = 1
+settings/0/joints/3/limitation = null
+settings/0/joints/4/rotation_axis = 1
+settings/0/joints/4/limitation = null
+settings/0/joints/5/rotation_axis = 1
+settings/0/joints/5/limitation = null
+settings/0/joints/6/rotation_axis = 1
+settings/0/joints/6/limitation = null
+settings/0/joints/7/rotation_axis = 1
+settings/0/joints/7/limitation = null
+settings/0/joints/8/rotation_axis = 1
+settings/0/joints/8/limitation = null
+settings/0/joints/9/rotation_axis = 1
+settings/0/joints/9/limitation = null
+
+[node name="Target" type="Marker3D" parent="." index="1" unique_id=1455791368]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.979184, 0, 0.100836515)

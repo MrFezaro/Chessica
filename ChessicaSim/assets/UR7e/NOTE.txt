@@ -1,0 +1,5 @@
+UR5e and UR7e according to UR Robots share the same mechanical design and thus are interchangeable.
+
+These model files are made from the original .step file distributed by UR Robots.
+
+No .obj files are present. The meshes ended up being too complex for Godot to handle.
