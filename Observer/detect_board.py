@@ -10,7 +10,7 @@ board_size = (7, 7)  # inner corners (cols, rows)
 # =========================
 # Open camera
 # =========================
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture(0)
 
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
