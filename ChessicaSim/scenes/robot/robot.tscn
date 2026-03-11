@@ -2,6 +2,14 @@
 
 [ext_resource type="PackedScene" uid="uid://6ph68j3wjkwo" path="res://assets/UR7e/UR7e.glb" id="1_eh0qr"]
 [ext_resource type="Script" uid="uid://bw6xcnb8bixfr" path="res://scenes/robot/Robot.gd" id="2_ay6cs"]
+[ext_resource type="Script" uid="uid://d0enjyv1cwel4" path="res://scenes/robot/Gripper.gd" id="3_h6cnt"]
+[ext_resource type="Script" uid="uid://ugekfldx15t0" path="res://scenes/robot/RobotNetNode.gd" id="3_weiqw"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_weiqw"]
+size = Vector3(0.5, 0.5, 0.5)
+
+[sub_resource type="BoxMesh" id="BoxMesh_h6cnt"]
+size = Vector3(0.1, 0.4, 0.3)
 
 [sub_resource type="JointLimitationCone3D" id="JointLimitationCone3D_ay6cs"]
 angle = 0.0
@@ -26,6 +34,22 @@ bone_idx = 8
 
 [node name="UR7e L6" parent="Armature/Skeleton3D/J6" index="0" unique_id=171228226]
 transform = Transform3D(-1, 5.7065463e-14, 5.6510352e-14, 5.7065463e-14, 1, -1.7867187e-08, -5.6510352e-14, -1.7867187e-08, -1, 5.6510354e-15, -0.64, -0.030000001)
+
+[node name="GripperBase" type="MeshInstance3D" parent="Armature/Skeleton3D/J6" index="1" unique_id=704583789]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 0)
+mesh = SubResource("BoxMesh_weiqw")
+script = ExtResource("3_h6cnt")
+
+[node name="Endpoint" type="Node3D" parent="Armature/Skeleton3D/J6/GripperBase" index="0" unique_id=587616503]
+transform = Transform3D(1, 0, -1.4081923e-20, 2.019484e-28, 1, 0, -1.3552527e-20, 0, 1, 0, 0.5, 0)
+
+[node name="Finger1" type="MeshInstance3D" parent="Armature/Skeleton3D/J6/GripperBase/Endpoint" index="0" unique_id=220071214]
+transform = Transform3D(1, 0, -1.4081923e-20, -1.009742e-28, 1, 0, -1.3552527e-20, 0, 1, 0.2, -0.10000002, 0)
+mesh = SubResource("BoxMesh_h6cnt")
+
+[node name="Finger2" type="MeshInstance3D" parent="Armature/Skeleton3D/J6/GripperBase/Endpoint" index="1" unique_id=1690538804]
+transform = Transform3D(1, 0, -1.4081923e-20, -1.009742e-28, 1, 0, -1.3552527e-20, 0, 1, -0.2, -0.10000002, 0)
+mesh = SubResource("BoxMesh_h6cnt")
 
 [node name="J5" parent="Armature/Skeleton3D" parent_id_path=PackedInt32Array(486774523) index="1" unique_id=645793934]
 transform = Transform3D(-1, 2.842171e-14, 1.3122836e-13, 1.3122836e-13, 1.816079e-08, 0.99999976, 0, 0.99999976, -1.816079e-08, 4.8382197e-13, 9.800861, 1.3390014)
@@ -76,9 +100,7 @@ settings/0/root_bone_name = "J1"
 settings/0/root_bone = 0
 settings/0/end_bone_name = "tip"
 settings/0/end_bone = 8
-settings/0/extend_end_bone = true
-settings/0/end_bone/direction = 6
-settings/0/end_bone/length = 0.0
+settings/0/extend_end_bone = false
 settings/0/joint_count = 9
 settings/0/joints/0/rotation_axis = 2
 settings/0/joints/0/limitation = SubResource("JointLimitationCone3D_ay6cs")
@@ -104,3 +126,7 @@ settings/0/joints/7/rotation_axis = 2
 settings/0/joints/7/limitation = null
 settings/0/joints/8/rotation_axis = 3
 settings/0/joints/8/limitation = null
+
+[node name="RobotNetNode" type="Node" parent="." index="1" unique_id=954670587]
+script = ExtResource("3_weiqw")
+metadata/_custom_type_script = "uid://ugekfldx15t0"
