@@ -1,0 +1,32 @@
+def tcp_move_test():
+  home_j = [2.167, -1.654, 1.753, -1.670, -1.571, 4.423]
+  pick_j = [2.215, -1.883, 2.303, -2.013, -1.569, 4.469]
+
+  ok = socket_open("158.38.140.60", 5000, "plc")
+  textmsg("socket_open: ", ok)
+
+  if ok:
+    while True:
+      cmd = socket_read_ascii_float(1, "plc", 5.0)
+      textmsg("received: ", cmd)
+
+      if cmd[0] == 1:
+        if cmd[1] == 1:
+          movej(home_j, a=0.3, v=0.2)
+        elif cmd[1] == 2:
+          movej(pick_j, a=0.3, v=0.2)
+        elif cmd[1] == 3:
+          twofg_grip_ext(15, 20, 10, 0)
+        elif cmd[1] == 4:
+          twofg_release_ext(30, 10, 0)
+        elif cmd[1] == 99:
+          break
+        end
+      end
+    end
+
+    socket_close("plc")
+  end
+end
+
+tcp_move_test()
