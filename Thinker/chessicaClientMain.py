@@ -59,6 +59,7 @@ ready [y/n] \t | Assigns True/False to the OPC-UA Ready node, forcing PLC to app
 reset \t\t| Resets the board to the standard chess setup.               
 history [wrap] \t| Alias: hist | Displays the entire move history of the current board. Optionally wraps output to [wrap] (int)
 load [abs_filepath] \t | Loads a board from a .pgn file. Path is absolute.
+think \t | Makes Chessica make a move on her own.
             """)
             return
 
@@ -171,6 +172,13 @@ load [abs_filepath] \t | Loads a board from a .pgn file. Path is absolute.
                 print("Board loaded")
             return
 
+        if(cmd[0] == "think"):
+            print("Chessica says: owie thinky")
+            move = chessimind.makeMove()
+            await sendMove(move)
+            await sendExecute()
+            return
+
         print("Not a recognized command. Did you mistype? Type 'help' or 'h' for help.")
     #
     #--- no more func ---
@@ -189,38 +197,45 @@ load [abs_filepath] \t | Loads a board from a .pgn file. Path is absolute.
 
         coldboot : bool = True
         prevReady : bool = False
-        while not chessimind.gameComplete():
+        wannaExit : bool = False
+        while not wannaExit:
+            while not chessimind.gameComplete():
 
-            #Awaits PLC to give a ready signal before deducing opponent's move and executing own move
-            #Only on rising edge
-            if(not coldboot and await nodeReady.read_value() and not prevReady):
-                #Opponent deduction is a heavy todo. Handling delta must be solved.
-                #Example of funky case:
-                #ready y | 0000 -> e7e5
-                #move a2a4 | -> a2a4
-                #ready y | -> 0000* -> e2a4
-                #history
-                #*this null move is a DIRECT CONSEQUENCE of the current delta handling below this very comment.
-                #newBoard = chessimind.board #PLACEHOLDER! Will be replaced with camera vision or commandline user input
-                #chessimind.applyMove(chessimind.deduceOpponentMove(newBoard)) #Handle opponent's turn
+                #Awaits PLC to give a ready signal before deducing opponent's move and executing own move
+                #Only on rising edge
+                if(not coldboot and await nodeReady.read_value() and not prevReady):
+                    #Opponent deduction is a heavy todo. Handling delta must be solved.
+                    #Example of funky case:
+                    #ready y | 0000 -> e7e5
+                    #move a2a4 | -> a2a4
+                    #ready y | -> 0000* -> e2a4
+                    #history
+                    #*this null move is a DIRECT CONSEQUENCE of the current delta handling below this very comment.
+                    #newBoard = chessimind.board #PLACEHOLDER! Will be replaced with camera vision or commandline user input
+                    #chessimind.applyMove(chessimind.deduceOpponentMove(newBoard)) #Handle opponent's turn
 
-                move = chessimind.makeMove()
-                await sendMove(move)
-                await sendExecute()
-                continue
-            else:
-                await inputCommand(await async_input("chessica >"))
-                coldboot = False
+                    move = chessimind.makeMove()
+                    await sendMove(move)
+                    await sendExecute()
+                    continue
+                else:
+                    await inputCommand(await async_input("chessica >"))
+                    coldboot = False
+                    pass
+
+                prevReady = await nodeReady.read_value()
                 pass
+            
+            chessimind.printBoard(
+                f"Game {datetime.datetime.today().strftime("%Y-%m-%d, %H-%M-%S")}",
+                "Ebic Chessica Gameplay",
+                datetime.datetime.today().strftime("%Y-%m-%d, %H:%M:%S"),
+                )
 
-            prevReady = await nodeReady.read_value()
-            pass
-        
-        chessimind.printBoard(
-            f"Game {datetime.datetime.today().strftime("%Y-%m-%d, %H-%M-%S")}",
-            "Ebic Chessica Gameplay",
-            datetime.datetime.today().strftime("%Y-%m-%d, %H:%M:%S"),
-            )
+        exitInput = await async_input("chessica > Exit program? [y/n] - ")
+        exitInput = exitInput.lower()
+        wannaExit = exitInput == "y" or exitInput == "yes"
+        pass
         
     return
 

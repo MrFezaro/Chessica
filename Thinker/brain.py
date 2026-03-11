@@ -33,11 +33,11 @@ class Brain:
     #Parses the move into custom UCI for better PLC friendliness by appending characters.
     #This uses the current board state to determine the move type. As calling it after a board update will result
     #in weird results.
-    #q - promotion (non-queen promotions unsupported, built into standard UCI) (non-attack promotion) TODO
-    #Q - promotion with capture TODO
-    #x - capture at end position (attack) TODO
-    #p - en passant (special capture) TODO
-    #c - castling (swap) TODO
+    #q - promotion (non-queen promotions unsupported, built into standard UCI) (non-attack promotion)
+    #Q - promotion with capture
+    #x - capture at end position (attack)
+    #p - en passant (special capture)
+    #c - castling (short/long gets deduced at PLC)
     def toCustomUci(self, move : chess.Move) -> str:
         moveResult : str = move.uci()
 
@@ -52,14 +52,16 @@ class Brain:
                 moveResult = moveResult.replace("q", "Q")
             else:
                 moveResult += "x"
+        
         elif(self.board.is_castling(move)):
             moveResult += "c"
         
         return moveResult
 
-    ###!WARNING!   WIP - UNTESTED   ###
+    ###!WARNING!   WIP - UNTESTED  and also huge TODO###
     #Deduces the chess move made by the opponent by comparing the newBoard to the previous board (in memory).
     #In fancy terms, it acquires the delta of the boards.
+    #Also checks if whatever move was made by the opponent was valid! If not, it will output and propagate an alarm signal to the PLC.
     def deduceOpponentMove(self, newBoard : chess.Board) -> chess.Move:
         #Figure out how to get the delta
         #A piece ALWAYS has to vanish from one square and appear on another
