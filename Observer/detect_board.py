@@ -5,12 +5,12 @@ import math
 # =========================
 # Chessboard configuration
 # =========================
-board_size = (7, 7)  # inner corners (cols, rows)
+board_size = (3, 3)  # inner corners (cols, rows)
 
 # =========================
-# Open camera
+# Open cameraa
 # =========================
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(2)
 
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
