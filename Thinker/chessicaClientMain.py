@@ -65,6 +65,7 @@ think \t | Makes Chessica make a move on her own.
 
         if(cmd[0] == "move"):
             if(len(cmd) == 1):
+                print(chessimind.board)
                 whiteTurn = len(chessimind.board.move_stack) % 2 == 0
                 team = "White"
                 if(whiteTurn): 
@@ -79,7 +80,7 @@ think \t | Makes Chessica make a move on her own.
                 try:
                     move : chess.Move = chess.Move.from_uci(cmd[1])
                 except chess.InvalidMoveError as err:
-                    print(f"{err}: Invalid move format. Expected UCI format: xnym")
+                    print(f"{err}: Invalid move format. Expected UCI format: xyuv")
 
                     return
                 
@@ -104,14 +105,15 @@ think \t | Makes Chessica make a move on her own.
         if(cmd[0] == "reset"):
             print("RESETTING BOARD")
             chessimind.board = chess.Board()
+            chessimind.board = chess.Board()
             return
         
         if(cmd[0] == "history" or cmd[0] == "hist"):
             wrap = 8
             if(len(cmd) > 1 and cmd[1] != ""):
-                if(cmd[1].isdigit()):
+                if(cmd[1].isdigit() and int(cmd[1]) != 0):
                     wrap = abs(int(cmd[1]))
-                elif(cmd[1]):
+                else:
                     print(f"Invalid wrap number. Defaulting to {wrap}")
                 
             print(f"Move history (wrap = {wrap}):")
@@ -134,12 +136,12 @@ think \t | Makes Chessica make a move on her own.
         if(cmd[0] == "execute" or cmd[0] == "exec"):
             try:
                 if(len(cmd) == 1):
-                    #BUG: the customUCI gets executed as a move on the CURRENT board, rather than PREVIOUS!
-                    customUci = chessimind.toCustomUci(chessimind.board.peek())
+                    customUci = chessimind.toCustomUci(chessimind.board.peek(), chessimind.previousBoard)
                     await sendMove(customUci)
                     await sendExecute()
                     return
-            except:
+            except Exception as err:
+                print(f"ERROR: {err}")
                 print(f"No move to execute")
                 return
             
@@ -178,7 +180,7 @@ think \t | Makes Chessica make a move on her own.
             await sendMove(move)
             await sendExecute()
             return
-
+        
         print("Not a recognized command. Did you mistype? Type 'help' or 'h' for help.")
     #
     #--- no more func ---

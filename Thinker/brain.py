@@ -6,6 +6,7 @@ from pathlib import Path
 class Brain:
     _engine : chess.engine.SimpleEngine = chess.engine.SimpleEngine.popen_uci(r"C:/_dev/Chessica/Thinker/stockfish-windows-x86-64-avx2/stockfish-windows-x86-64-avx2.exe")
     board : chess.Board = None
+    previousBoard : chess.Board = None
     #How deep should the engine explore, e.g. how many steps in the future.
 
     timePerMove = 0.01 #In seconds
@@ -38,27 +39,31 @@ class Brain:
     #x - capture at end position (attack)
     #p - en passant (special capture)
     #c - castling (short/long gets deduced at PLC)
-    def toCustomUci(self, move : chess.Move) -> str:
+    def toCustomUci(self, move : chess.Move, referenceBoard : chess.Board = None) -> str:
+        if(referenceBoard is None):
+            referenceBoard = self.board
+        
         moveResult : str = move.uci()
 
         if(move == None):
             return "0000" #Null move
         
-        if(self.board.is_en_passant(move)):
+        if(referenceBoard.is_en_passant(move)):
             moveResult += "p"
 
-        elif(self.board.is_capture(move)):
+        elif(referenceBoard.is_capture(move)):
             if(moveResult[-1] == "q"): #Replace standard UCI promotion mark with attack promotion mark
                 moveResult = moveResult.replace("q", "Q")
             else:
                 moveResult += "x"
         
-        elif(self.board.is_castling(move)):
+        elif(referenceBoard.is_castling(move)):
             moveResult += "c"
         
         return moveResult
 
     ###!WARNING!   WIP - UNTESTED  and also huge TODO###
+    ##AWAITING CAMERA VISION TO IMPLEMENT THIS
     #Deduces the chess move made by the opponent by comparing the newBoard to the previous board (in memory).
     #In fancy terms, it acquires the delta of the boards.
     #Also checks if whatever move was made by the opponent was valid! If not, it will output and propagate an alarm signal to the PLC.
@@ -103,6 +108,7 @@ class Brain:
 
     #Applies a move to he board
     def applyMove(self, move : chess.Move) -> None:
+        self.previousBoard = self.board.copy()
         self.board.push(move)
         return
 
