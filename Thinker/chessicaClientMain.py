@@ -7,6 +7,7 @@ import asyncio
 import chess
 from asyncua import Client
 import brain
+import supersecret
 
 #If console commands should be enabled. SHOULD BE FALSE outside of testing.
 CONSOLE_COMMANDS : bool = True
@@ -175,7 +176,7 @@ think \t | Makes Chessica make a move on her own.
             return
 
         if(cmd[0] == "think"):
-            print("Chessica says: owie thinky")
+            print(f"Chessica says: {supersecret.makeThing()}")
             move = chessimind.makeMove()
             await sendMove(move)
             await sendExecute()
