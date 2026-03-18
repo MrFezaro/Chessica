@@ -217,9 +217,15 @@ think \t | Makes Chessica make a move on her own.
                     #newBoard = chessimind.board #PLACEHOLDER! Will be replaced with camera vision or commandline user input
                     #chessimind.applyMove(chessimind.deduceOpponentMove(newBoard)) #Handle opponent's turn
 
+                    #Read board status (camera): afterOpponentMove
+                    #Check if move is legal (get data from camera)
+                    #If NOT legal: give some sort of error signal
+
+                    #else if legal: Perform own move as usual
                     move = chessimind.makeMove()
                     await sendMove(move)
                     await sendExecute()
+                    #Read board status (camera): beforeOpponentMove
                     continue
                 else:
                     await inputCommand(await async_input("chessica >"))
