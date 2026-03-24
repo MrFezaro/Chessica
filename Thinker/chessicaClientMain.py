@@ -17,7 +17,9 @@ BOT_DEPTH : int = 10
 initialChessBoard = chess.Board()
 
 #--- OPC-UA Setup ---
-url = "opc.tcp://localhost:4840"
+url = "opc.tcp://158.38.140.60:4840"
+username = "admin"
+password = "NTNUIndSysavnj9"
 
 nodeReadyId = "ns=5;b=AQAAAKbhKnGK9zM6uvotdobvYEeM925mjOIkbek=" #OUTPUT, if PLC is ready
 nodeMoveInputId = "ns=5;b=AQAAAKbhKnGK9zM6uvotdobvYEeM9255hvUlXYfzNWDp" #INPUT, move for PLC to execute
@@ -189,7 +191,15 @@ think \t | Makes Chessica make a move on her own.
 
     print(f"Connecting to {url} ...")
 
-    async with Client(url=url) as client:
+    client = Client(url)
+    try:
+        #____ Connect to OPC-UA server ____
+        client.set_user(username)
+        client.set_password(password)
+
+        await client.connect()
+
+        #___ Actual code ___
         print(f"CONNECTED!")
 
         nodeReady = client.get_node(nodeReadyId)
@@ -236,6 +246,9 @@ think \t | Makes Chessica make a move on her own.
         exitInput = exitInput.lower()
         wannaExit = exitInput == "y" or exitInput == "yes"
         pass
+
+    finally:
+        client.disconnect()
         
     return
 
