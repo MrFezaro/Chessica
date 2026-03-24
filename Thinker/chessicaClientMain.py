@@ -207,16 +207,7 @@ think \t | Makes Chessica make a move on her own.
                 #Awaits PLC to give a ready signal before deducing opponent's move and executing own move
                 #Only on rising edge
                 if(not coldboot and await nodeReady.read_value() and not prevReady):
-                    #Opponent deduction is a heavy todo. Handling delta must be solved.
-                    #Example of funky case:
-                    #ready y | 0000 -> e7e5
-                    #move a2a4 | -> a2a4
-                    #ready y | -> 0000* -> e2a4
-                    #history
-                    #*this null move is a DIRECT CONSEQUENCE of the current delta handling below this very comment.
-                    #newBoard = chessimind.board #PLACEHOLDER! Will be replaced with camera vision or commandline user input
-                    #chessimind.applyMove(chessimind.deduceOpponentMove(newBoard)) #Handle opponent's turn
-
+                    #TODO: Shove in camera vision code
                     #Read board status (camera): afterOpponentMove
                     #Check if move is legal (get data from camera)
                     #If NOT legal: give some sort of error signal
