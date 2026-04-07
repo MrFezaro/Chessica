@@ -1,7 +1,7 @@
 #USE PYTHON 3.13.11
 #Client with virtual PLC as server
 
-import inspect
+import time
 import datetime
 import asyncio
 import chess
@@ -12,7 +12,7 @@ import supersecret
 #If console commands should be enabled. SHOULD BE FALSE outside of testing.
 CONSOLE_COMMANDS : bool = True
 #How many nodes deep the bot should explore
-BOT_DEPTH : int = 10
+BOT_DEPTH : int = 30
 
 initialChessBoard = chess.Board()
 
@@ -44,6 +44,8 @@ async def main():
 
     async def sendExecute() -> None:
         await nodeMoveExecute.write_value(True)
+        time.sleep(1)
+        await nodeMoveExecute.write_value(False)
         return
 
     #Commands:
