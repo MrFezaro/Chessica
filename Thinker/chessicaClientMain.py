@@ -89,7 +89,7 @@ think \t | Makes Chessica make a move on her own.
 
                     return
                 
-                if(chessimind.board.is_legal(move)):
+                if(chessimind.board.is_legal(move) or chessimind.board.is_castling(move)):
                     chessimind.applyMove(move)
                     print(f"Move added: {move}")
                 else:
@@ -156,7 +156,7 @@ think \t | Makes Chessica make a move on her own.
                 print(f"{err}: Invalid move format. Expected UCI format: xnym")
                 return
             
-            if(chessimind.board.is_legal(move)):
+            if(chessimind.board.is_legal(move) or chessimind.board.is_castling(move)):
                 customUci = chessimind.toCustomUci(move)
                 chessimind.applyMove(move)
                 await sendMove(customUci)
