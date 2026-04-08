@@ -1,5 +1,13 @@
-[FEN "3k4/4p3/3p4/3P4/8/8/r6p/7K b KQkq - 0 1"]
+[Event "?"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "?"]
+[Black "?"]
+[Result "*"]
+[Orientation "white"]
+[SetUp "1"]
+[FEN "3k4/4p3/3p4/3P4/8/8/r6p/7K b - - 0 1"]
 
-%TEST: Expect p at end of custom UCI, after black move e7e5
-%Custom UCI: Done
-%Robot Movement: 
+ *
+
