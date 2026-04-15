@@ -68,6 +68,10 @@ class Brain:
         elif(referenceBoard.is_castling(move)):
             moveResult += "c"
         
+        if(referenceBoard.is_capture(move)): #If capture, append the piece type captured
+            capturedPieceType : str = referenceBoard.piece_at(move.to_square).symbol().upper()
+            moveResult += capturedPieceType
+
         return moveResult
 
     ###!WARNING!   WIP - UNTESTED  and also huge TODO###
