@@ -46,8 +46,16 @@ class Brain:
         moveResult : str = move.uci()
 
         if(move == None):
-            return "0000" #Null move
+            return "_0000" #Null move
         
+        #We do not care about piece color
+        piece = referenceBoard.piece_at(move.from_square)
+        pieceType = "_" #Empty piece type
+        if(piece != None):
+            pieceType : str = piece.symbol().upper()
+        
+        moveResult = pieceType + moveResult
+
         if(referenceBoard.is_en_passant(move)):
             moveResult += "p"
 
