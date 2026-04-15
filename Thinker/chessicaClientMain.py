@@ -17,7 +17,7 @@ BOT_DEPTH : int = 30
 initialChessBoard = chess.Board()
 
 #--- OPC-UA Setup ---
-url = "opc.tcp://158.38.140.60:4840"
+url = "opc.tcp://158.38.140.87:4840"
 username = "admin"
 password = "NTNUIndSysavnj9"
 
