@@ -1,0 +1,139 @@
+# === Funksjoner ===
+
+# Transformer XYZ fra plc ramme til robot ramme.
+#x, y, z - posisjon
+#base_x, base_y - origo til robot ramme
+#c, s - cosinus og sinus av vinkel
+def transform_plc_robot(x, y, z, base_x, base_y, c, s):
+ result = [0, 0, 0]
+ dx_robot = (x * c - y * s) * 0.001
+ dy_robot = (x * s + y * c) * 0.001
+ result[0] = base_x + dx_robot
+ result[1] = base_y + dy_robot
+ result[2] = z * 0.001
+ return result
+end
+ 
+# Transformer XYX fra robot ramme til plc ramme
+def transform_robot_plc(x, y, z, base_x, base_y, c, s):
+ result = [0, 0, 0]
+ dx = (x - base_x) * 1000.0
+ dy = (y - base_y) * 1000.0
+ result[2] = z * 1000.0
+ result[0] = dx * c + dy * s
+ result[1] = -dx * s + dy * c
+ return result
+end
+ 
+# Send status til PLC, koordinater og griper
+def sendStatus(x, y, z, grip, sock):
+ # Send PLC-koordinater + griper-status tilbake
+ feedback = "("
+ feedback = str_cat(feedback, to_str(x))
+ feedback = str_cat(feedback, ",")
+ feedback = str_cat(feedback, to_str(y))
+ feedback = str_cat(feedback, ",")
+ feedback = str_cat(feedback, to_str(z))
+ feedback = str_cat(feedback, ",")
+ feedback = str_cat(feedback, to_str(grip))
+ feedback = str_cat(feedback, ")\n")
+ socket_send_string(feedback, sock)
+end
+
+def chess_robot():
+ PLC_IP   = "158.38.140.87"
+ PLC_PORT = 5000
+ SOCK     = "plc"
+
+ BASE_X = 0.042
+ BASE_Y = -0.353
+ cosine = 0.7071
+ sine = -0.7071
+
+ rx = 1.188
+ ry = -2.909
+ rz = 0.0
+
+ acc = 0.8
+ vel = 0.5
+
+ x_plc         = 0.0
+ y_plc         = 0.0
+ z_plc         = 0.0
+ gripper       = 0.0
+ x_r           = 0.0
+ y_r           = 0.0
+ z_r           = 0.0
+ grip_feedback = 0.0
+ on_return     = 0
+
+
+ textmsg("Checking socket")
+
+ ok = socket_open(PLC_IP, PLC_PORT, SOCK)
+ while ok == False:
+  textmsg("Connecting...")
+  sleep(1.0)
+  ok = socket_open(PLC_IP, PLC_PORT, SOCK)
+ end
+
+ textmsg("Connected")
+
+ # La PLC vite initialposisjon
+ tcp_pose = get_actual_tcp_pose()
+ tf = transform_robot_plc(tcp_pose[0], tcp_pose[1], tcp_pose[2], BASE_X, BASE_Y, cosine, sine)
+ sendStatus(tf[0], tf[1], tf[2], grip_feedback, SOCK)
+
+ textmsg("Initial position sent")
+
+ while True:
+
+  data = socket_read_ascii_float(4, SOCK, 0.1)
+  textmsg("Mottatt antall: ", data[0])
+
+  if data[0] == 4:
+   x_plc   = data[1]
+   y_plc   = data[2]
+   z_plc   = data[3]
+   gripper = data[4]
+
+   # PLC -> Robot koordinater (+45 grader rotasjon)
+   tf = transform_plc_robot(x_plc, y_plc, z_plc, BASE_X, BASE_Y, cosine, sine)
+   x_r = tf[0]
+   y_r = tf[1]
+   z_r = tf[2]
+
+   # Beveg roboten
+   movel(p[x_r, y_r, z_r, rx, ry, rz], a=acc, v=vel)
+
+   # Gripper
+   if gripper == 1.0:
+    on_return = twofg_grip(width=0, force=40, speed=100, external_grip=True, tool_index=0)
+    if on_return == 0:
+     grip_feedback = 1.0
+    else:
+     grip_feedback = 0.0
+    end
+   else:
+    on_return = twofg_release(width=25, speed=100, tool_index=0)
+    grip_feedback = 0.0
+   end
+
+   # Send robotens koordinater tilbake i PLC ramme, i tillegg til griper status
+   tcp_pose = get_actual_tcp_pose()
+   tf = transform_robot_plc(tcp_pose[0], tcp_pose[1], tcp_pose[2], BASE_X, BASE_Y, cosine, sine)
+   sendStatus(tf[0], tf[1], tf[2], grip_feedback, SOCK)
+
+  else:
+   textmsg("Ingen data eller timeout, venter...")
+   sleep(0.1)
+  end
+
+ end
+
+ socket_close(SOCK)
+
+end
+
+# Kjør hovedfunksjonen
+chess_robot()
