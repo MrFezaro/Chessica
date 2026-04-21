@@ -97,7 +97,7 @@ def chess_robot():
    z_plc   = data[3]
    gripper = data[4]
 
-   # PLC -> Robot koordinater (+45 grader rotasjon)
+   # PLC -> Robot koordinater
    tf = transform_plc_robot(x_plc, y_plc, z_plc, BASE_X, BASE_Y, cosine, sine)
    x_r = tf[0]
    y_r = tf[1]
@@ -119,15 +119,15 @@ def chess_robot():
     grip_feedback = 0.0
    end
 
-   # Send robotens koordinater tilbake i PLC ramme, i tillegg til griper status
-   tcp_pose = get_actual_tcp_pose()
-   tf = transform_robot_plc(tcp_pose[0], tcp_pose[1], tcp_pose[2], BASE_X, BASE_Y, cosine, sine)
-   sendStatus(tf[0], tf[1], tf[2], grip_feedback, SOCK)
-
   else:
    textmsg("Ingen data eller timeout, venter...")
    sleep(0.1)
   end
+
+  #Send robotens koordinater tilbake i PLC ramme, i tillegg til griper status
+  tcp_pose = get_actual_tcp_pose()
+  tf = transform_robot_plc(tcp_pose[0], tcp_pose[1], tcp_pose[2], BASE_X, BASE_Y, cosine, sine)
+  sendStatus(tf[0], tf[1], tf[2], grip_feedback, SOCK)
 
  end
 
