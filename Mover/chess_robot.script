@@ -37,7 +37,8 @@ def sendStatus(x, y, z, grip, sock):
  feedback = str_cat(feedback, ",")
  feedback = str_cat(feedback, to_str(grip))
  feedback = str_cat(feedback, ")\n")
- socket_send_string(feedback, sock)
+ ok = socket_send_string(feedback, sock)
+ return ok
 end
 
 def chess_robot():
@@ -72,7 +73,7 @@ def chess_robot():
 
  ok = socket_open(PLC_IP, PLC_PORT, SOCK)
  while ok == False:
-  textmsg("Connecting...")
+  textmsg(str_cat("Connecting to ", PLC_IP))
   sleep(1.0)
   ok = socket_open(PLC_IP, PLC_PORT, SOCK)
  end
@@ -87,48 +88,57 @@ def chess_robot():
  textmsg("Initial position sent")
 
  while True:
+  #Socket status, koble igjen om nødvendig
+  if ok == False:
+   textmsg(str_cat("Attempting reconnect to ", PLC_IP))
+   socket_close(SOCK)
+   ok = socket_open(PLC_IP, PLC_PORT, SOCK)
+  else:
+   
+   # Faktisk bevegelsesløkke
 
-  data = socket_read_ascii_float(4, SOCK, 0.1)
-  textmsg("Mottatt antall: ", data[0])
+   data = socket_read_ascii_float(4, SOCK, 0.1)
+   textmsg("Mottatt antall: ", data[0])
 
-  if data[0] == 4:
-   x_plc   = data[1]
-   y_plc   = data[2]
-   z_plc   = data[3]
-   gripper = data[4]
+   if data[0] == 4:
+    x_plc   = data[1]
+    y_plc   = data[2]
+    z_plc   = data[3]
+    gripper = data[4]
 
-   # PLC -> Robot koordinater
-   tf = transform_plc_robot(x_plc, y_plc, z_plc, BASE_X, BASE_Y, cosine, sine)
-   x_r = tf[0]
-   y_r = tf[1]
-   z_r = tf[2]
+    # PLC -> Robot koordinater
+    tf = transform_plc_robot(x_plc, y_plc, z_plc, BASE_X, BASE_Y, cosine, sine)
+    x_r = tf[0]
+    y_r = tf[1]
+    z_r = tf[2]
 
-   # Beveg roboten
-   movel(p[x_r, y_r, z_r, rx, ry, rz], a=acc, v=vel)
+    # Beveg roboten
+    movel(p[x_r, y_r, z_r, rx, ry, rz], a=acc, v=vel)
 
-   # Gripper
-   if gripper == 1.0:
-    on_return = twofg_grip(width=0, force=40, speed=100, external_grip=True, tool_index=0)
-    if on_return == 0:
-     grip_feedback = 1.0
+	# Griper
+    if gripper == 1.0:
+     on_return = twofg_grip(width=0, force=40, speed=100, external_grip=True, tool_index=0)
+     if on_return == 0:
+      grip_feedback = 1.0
+     else:
+      grip_feedback = 0.0
+     end
     else:
+     on_return = twofg_release(width=25, speed=100, tool_index=0)
      grip_feedback = 0.0
     end
+
    else:
-    on_return = twofg_release(width=25, speed=100, tool_index=0)
-    grip_feedback = 0.0
+    textmsg("Ingen data eller timeout, venter...")
+    sleep(0.1)
    end
 
-  else:
-   textmsg("Ingen data eller timeout, venter...")
-   sleep(0.1)
+    #Send robotens koordinater tilbake i PLC ramme, i tillegg til griper status
+    tcp_pose = get_actual_tcp_pose()
+    tf = transform_robot_plc(tcp_pose[0], tcp_pose[1], tcp_pose[2], BASE_X, BASE_Y, cosine, sine)
+    ok = sendStatus(tf[0], tf[1], tf[2], grip_feedback, SOCK) #Send og sjekk status
+ 
   end
-
-  #Send robotens koordinater tilbake i PLC ramme, i tillegg til griper status
-  tcp_pose = get_actual_tcp_pose()
-  tf = transform_robot_plc(tcp_pose[0], tcp_pose[1], tcp_pose[2], BASE_X, BASE_Y, cosine, sine)
-  sendStatus(tf[0], tf[1], tf[2], grip_feedback, SOCK)
-
  end
 
  socket_close(SOCK)
