@@ -56,8 +56,11 @@ class Brain:
         
         moveResult = pieceType + moveResult
 
-        if(referenceBoard.is_en_passant(move)):
+        if(referenceBoard.is_en_passant(move)): #En passant is always pawn vs pawn
             moveResult += "p"
+            capturedPieceType : str = "P".upper()
+            moveResult += capturedPieceType
+            return moveResult
 
         elif(referenceBoard.is_capture(move)):
             if(moveResult[-1] == "q"): #Replace standard UCI promotion mark with attack promotion mark

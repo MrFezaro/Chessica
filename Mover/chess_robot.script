@@ -99,6 +99,8 @@ def chess_robot():
 
    data = socket_read_ascii_float(4, SOCK, 0.1)
    textmsg("Mottatt antall: ", data[0])
+   coords = str_cat(str_cat(str_cat("X: ", data[1]), str_cat(", Y: ", data[2])), str_cat(str_cat(", Z: ", data[3]), str_cat(", G: ", data[4])))
+   textmsg(coords)
 
    if data[0] == 4:
     x_plc   = data[1]
