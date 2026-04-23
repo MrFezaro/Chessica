@@ -42,10 +42,17 @@ def sendStatus(x, y, z, grip, sock):
 end
 
 def chess_robot():
+ # Tilbkobling
  PLC_IP   = "158.38.140.87"
  PLC_PORT = 5000
  SOCK     = "plc"
+ 
+ # Gripeting
+ GRIP_FORCE = 20 #[N]
+ GRIP_WIDTH = 11 #[mm]
+ RELEASE_WIDTH = 15 #[mm]
 
+ # Transformasjonsmatrise
  BASE_X = 0.042
  BASE_Y = -0.353
  cosine = 0.7071
@@ -55,6 +62,7 @@ def chess_robot():
  ry = -2.909
  rz = 0.0
 
+ # Variabler
  acc = 0.8
  vel = 0.5
 
@@ -119,14 +127,14 @@ def chess_robot():
 
 	# Griper
     if gripper == 1.0:
-     on_return = twofg_grip(width=0, force=40, speed=100, external_grip=True, tool_index=0)
+     on_return = twofg_grip(width=GRIP_WIDTH, force=GRIP_FORCE, speed=100, external_grip=True, tool_index=0)
      if on_return == 0:
       grip_feedback = 1.0
      else:
       grip_feedback = 0.0
      end
     else:
-     on_return = twofg_release(width=25, speed=100, tool_index=0)
+     on_return = twofg_release(width=RELEASE_WIDTH, speed=100, tool_index=0)
      grip_feedback = 0.0
     end
 

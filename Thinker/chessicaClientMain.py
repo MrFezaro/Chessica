@@ -250,7 +250,7 @@ think \t | Makes Chessica make a move on her own.
         pass
 
     finally:
-        client.disconnect()
+        await client.disconnect()
         
     return
 
