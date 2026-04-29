@@ -9,11 +9,11 @@ from asyncua import Client
 import brain
 import supersecret
 
-#If console commands should be enabled. SHOULD BE FALSE outside of testing.
-CONSOLE_COMMANDS : bool = True
-
 DEBUG_COMMAND_PREFIX : str = "CMD_"
 DEBUG_COMMANDS : list = ["it_queens", "it_capture", "reset"]
+
+#Whether console commands should be enabled.
+useConsoleCommands : bool = True
 
 #How many nodes deep the bot should explore
 BOT_DEPTH : int = 30
@@ -199,6 +199,12 @@ debug [cmd] \t | Accepts a non-chess command that interacts more directly with t
             else:
                 print(f"Valid debug commands: {DEBUG_COMMANDS}")
                 return
+            
+        if(cmd[0] == "autoplay"):
+            global useConsoleCommands
+            useConsoleCommands = False
+            print(f"Turning off console. Goodluck!")
+            return
         
         print("Not a recognized command. Did you mistype? Type 'help' or 'h' for help.")
     #
@@ -225,14 +231,13 @@ debug [cmd] \t | Accepts a non-chess command that interacts more directly with t
         chessimind = brain.Brain(BOT_DEPTH, initialChessBoard)
 
         coldboot : bool = True
-        prevReady : bool = False
         wannaExit : bool = False
         while not wannaExit:
             while not chessimind.gameComplete():
 
                 #Awaits PLC to give a ready signal before deducing opponent's move and executing own move
                 #Only on rising edge
-                if(not coldboot and await nodeReady.read_value() and not prevReady):
+                if(not coldboot and await nodeReady.read_value()):
                     #TODO: Shove in camera vision code
                     #Read board status (camera): afterOpponentMove
                     #Check if move is legal (get data from camera)
@@ -244,12 +249,11 @@ debug [cmd] \t | Accepts a non-chess command that interacts more directly with t
                     await sendExecute()
                     #Read board status (camera): beforeOpponentMove
                     continue
-                else:
+                elif(useConsoleCommands):
                     await inputCommand(await async_input("chessica >"))
-                    coldboot = False
                     pass
 
-                prevReady = await nodeReady.read_value()
+                coldboot = False
                 pass
             
             chessimind.printBoard(
