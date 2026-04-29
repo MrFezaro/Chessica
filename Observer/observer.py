@@ -5,7 +5,6 @@ import os
 from itertools import combinations
 
 CORNERS_FILE = "./Observer/board_corners.json"
-STATE_FILE   = "./Observer/game_state.json"
 
 def save_corners(pts):
     with open(CORNERS_FILE, 'w') as f:
@@ -20,6 +19,31 @@ def load_corners():
             print(f"Loaded saved board corners from {CORNERS_FILE}")
             return [tuple(p) for p in pts]
     return []
+
+
+# ── camera calibration ────────────────────────────────────────────────────────
+
+CAMERA_MATRIX_FILE = "./Observer/camera_matrix.npy"
+DIST_COEFFS_FILE   = "./Observer/dist_coeffs.npy"
+
+def load_calibration(frame_shape):
+    """
+    Load camera matrix + distortion coefficients if available.
+    Returns (K, dist, new_K) or (None, None, None) if not found.
+    """
+    if not (os.path.exists(CAMERA_MATRIX_FILE) and os.path.exists(DIST_COEFFS_FILE)):
+        return None, None, None
+    K    = np.load(CAMERA_MATRIX_FILE)
+    dist = np.load(DIST_COEFFS_FILE)
+    h, w = frame_shape[:2]
+    new_K, _ = cv2.getOptimalNewCameraMatrix(K, dist, (w, h), alpha=0)
+    print("Camera calibration loaded — lens undistortion active.")
+    return K, dist, new_K
+
+def undistort(frame, K, dist, new_K):
+    if K is None:
+        return frame
+    return cv2.undistort(frame, K, dist, None, new_K)
 
 
 COLS = 'abcdefgh'
@@ -244,8 +268,8 @@ INITIAL_BOARD = {
 }
 
 UNICODE_PIECES = {
-    'K':'♔','Q':'♕','R':'♖','B':'♗','N':'♘','P':'♙',
-    'k':'♚','q':'♛','r':'♜','b':'♝','n':'♞','p':'♟',
+    'K': '♔', 'Q': '♕', 'R': '♖', 'B': '♗', 'N': '♘', 'P': '♙',
+    'k': '♚', 'q': '♛', 'r': '♜', 'b': '♝', 'n': '♞', 'p': '♟',
 }
 
 class GameState:
@@ -255,38 +279,11 @@ class GameState:
         self.history     = []           # list of move strings
         self.move_number = 1
 
-    # ── persistence ──────────────────────────────────────────────────────────
-
-    def save(self):
-        os.makedirs(os.path.dirname(STATE_FILE), exist_ok=True)
-        with open(STATE_FILE, 'w') as f:
-            json.dump({
-                'board':       self.board,
-                'turn':        self.turn,
-                'history':     self.history,
-                'move_number': self.move_number,
-            }, f, indent=2)
-
-    def load(self):
-        if not os.path.exists(STATE_FILE):
-            return False
-        with open(STATE_FILE) as f:
-            data = json.load(f)
-        self.board       = data['board']
-        self.turn        = data['turn']
-        self.history     = data.get('history', [])
-        self.move_number = data.get('move_number', 1)
-        print(f"Game state loaded — move {self.move_number}, "
-              f"{'White' if self.turn=='w' else 'Black'} to move.")
-        return True
-
     def reset(self):
         self.board       = dict(INITIAL_BOARD)
         self.turn        = 'w'
         self.history     = []
         self.move_number = 1
-        if os.path.exists(STATE_FILE):
-            os.remove(STATE_FILE)
         print("Game reset to starting position.")
         self.print_board()
 
@@ -304,7 +301,6 @@ class GameState:
         else:
             self.turn = 'w'
             self.move_number += 1
-        self.save()
 
     def _record(self, move_str):
         dot = '.' if self.turn == 'w' else '...'
@@ -448,11 +444,15 @@ def main():
     corner_pts = load_corners()
     colors = [(0, 255, 80), (0, 120, 255), (255, 80, 0), (255, 0, 180)]
     auto_status = ""
+    last_diff_display = None   # persists the diff image between moves
+
+    # ── lens undistortion ─────────────────────────────────────────────────────
+    ret0, probe = cap.read()
+    K, dist, new_K = load_calibration(probe.shape) if ret0 else (None, None, None)
 
     # ── game state ────────────────────────────────────────────────────────────
     game = GameState()
-    if not game.load():
-        print("No saved game found — starting fresh.")
+    print("Starting fresh game.")
     game.print_board()
 
     print("Controls:")
@@ -469,6 +469,7 @@ def main():
         if not ret:
             break
 
+        frame   = undistort(frame, K, dist, new_K)
         display = frame.copy()
         board_ready = len(corner_pts) == 4
 
@@ -509,20 +510,9 @@ def main():
                     cv2.FONT_HERSHEY_SIMPLEX, 0.62, (0,220,255), 2, cv2.LINE_AA)
         cv2.imshow("1 - Live Colour", display)
 
-        # diff window
-        if capture_count == 2 and frame1 is not None and frame2 is not None:
-            diff = cv2.absdiff(frame1, frame2)
-            diff_amp = cv2.convertScaleAbs(diff, alpha=3.0, beta=0)
-            if board_ready:
-                mask = get_board_mask(diff_amp.shape, corner_pts)
-                diff_amp = cv2.bitwise_and(diff_amp, cv2.merge([mask,mask,mask]))
-            for i, (cx, cy, r) in enumerate(circles):
-                cv2.circle(diff_amp, (cx, cy), r, colors[i % len(colors)], 2)
-            changed_px = int(np.sum(np.any(diff > 25, axis=2)))
-            pct = changed_px / (diff.shape[0]*diff.shape[1]) * 100
-            cv2.putText(diff_amp, f"Changed: {changed_px}px ({pct:.1f}%)",
-                        (10,28), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,255,255), 2, cv2.LINE_AA)
-            cv2.imshow("2 - Frame Difference", diff_amp)
+        # ── diff window — always visible ──────────────────────────────────────
+        if last_diff_display is not None:
+            cv2.imshow("2 - Frame Difference", last_diff_display)
         else:
             ph = np.zeros((frame.shape[0], frame.shape[1], 3), dtype=np.uint8)
             msg = ("Waiting for Frame 2..." if capture_count == 1
@@ -586,6 +576,7 @@ def main():
             chess_coords = []
             move_label = ""
             auto_status = ""
+            last_diff_display = None
             print("Captures reset.")
 
         elif key == ord(' '):
@@ -626,6 +617,23 @@ def main():
                     move_label = f"{move_label}  |  {move_desc}"
                 else:
                     move_label = move_desc
+
+                # ── build diff display image ──────────────────────────────────
+                diff_amp = cv2.convertScaleAbs(diff, alpha=3.0, beta=0)
+                if board_ready:
+                    mask = get_board_mask(diff_amp.shape, corner_pts)
+                    diff_amp = cv2.bitwise_and(diff_amp, cv2.merge([mask, mask, mask]))
+                for i, (cx, cy, r) in enumerate(circles):
+                    cv2.circle(diff_amp, (cx, cy), r, colors[i % len(colors)], 2)
+                    cv2.circle(diff_amp, (cx, cy), 4,  colors[i % len(colors)], -1)
+                changed_px = int(np.sum(np.any(diff > 25, axis=2)))
+                pct = changed_px / (diff.shape[0] * diff.shape[1]) * 100
+                cv2.putText(diff_amp, f"Changed: {changed_px}px ({pct:.1f}%)",
+                            (10, 28), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,255,255), 2, cv2.LINE_AA)
+                cv2.putText(diff_amp, move_desc,
+                            (10, 58), cv2.FONT_HERSHEY_SIMPLEX, 0.55, (0,220,255), 2, cv2.LINE_AA)
+                last_diff_display = diff_amp
+                # ─────────────────────────────────────────────────────────────
 
                 # Roll frame2 → frame1 so next SPACE immediately diffs
                 frame1 = frame2
