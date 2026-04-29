@@ -60,7 +60,7 @@ async def main():
     async def inputCommand(input : str) -> None:
         cmd : list[str] = input.lower().split(" ")
         if(cmd[0] == "h" or cmd[0] == "help"):
-            print("""✨ Chessica - Clever Linearized Intelligience (CLI) ✨
+            print(f"""✨ Chessica - Clever Linearized Intelligience (CLI) ✨
 help \t\t| @grok what is this           
 move [move] \t| Supposed to represent opponent moves. Assigns UCI move to board stack. If no parameters provided: outputs latest move with the team color.  
 execute [move] \t| Alias: exec | Supposed to represent Chessica moves. Assigns move to OPC-UA MoveInput node. Chessica will remember this. If no parameters provided: sends latest move to PLC. 
@@ -69,6 +69,7 @@ reset \t\t| Resets the board to the standard chess setup.
 history [wrap] \t| Alias: hist | Displays the entire move history of the current board. Optionally wraps output to [wrap] (int)
 load [abs_filepath] \t | Loads a board from a .pgn file. Path is absolute.
 think \t | Makes Chessica make a move on her own.
+debug [cmd] \t | Accepts a non-chess command that interacts more directly with the robot. Valid commands: {DEBUG_COMMANDS}
             """)
             return
 
