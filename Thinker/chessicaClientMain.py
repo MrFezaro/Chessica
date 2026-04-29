@@ -11,6 +11,10 @@ import supersecret
 
 #If console commands should be enabled. SHOULD BE FALSE outside of testing.
 CONSOLE_COMMANDS : bool = True
+
+DEBUG_COMMAND_PREFIX : str = "CMD_"
+DEBUG_COMMANDS : list = ["it_queens", "it_capture", "reset"]
+
 #How many nodes deep the bot should explore
 BOT_DEPTH : int = 30
 
@@ -185,6 +189,15 @@ think \t | Makes Chessica make a move on her own.
             await sendMove(move)
             await sendExecute()
             return
+        
+        if(cmd[0] == "debug"):
+            if(len(cmd) == 2):
+                await sendMove(DEBUG_COMMAND_PREFIX+cmd[1].lower())
+                await sendExecute()
+                return
+            else:
+                print(f"Valid debug commands: {DEBUG_COMMANDS}")
+                return
         
         print("Not a recognized command. Did you mistype? Type 'help' or 'h' for help.")
     #
