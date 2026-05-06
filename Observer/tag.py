@@ -3,33 +3,24 @@ import cv2
 import sys
 from pupil_apriltags import Detector
 
-FOCUS_STEP       = 1
-FOCUS_MIN        = 0
-FOCUS_MAX        = 255
-DECISION_MARGIN  = 5  # raise to reduce false positives (0–100+)
+DECISION_MARGIN = 30
+FOCUS_STEP      = 1
+FOCUS_MIN       = 0
+FOCUS_MAX       = 255
 
-def apply_manual_camera_settings(cap):
-    cap.set(cv2.CAP_PROP_AUTOFOCUS,        0)
-    cap.set(cv2.CAP_PROP_AUTO_EXPOSURE,    1)
-    cap.set(cv2.CAP_PROP_EXPOSURE,        -6)
-    cap.set(cv2.CAP_PROP_AUTO_WB,          0)
-    cap.set(cv2.CAP_PROP_WB_TEMPERATURE, 4600)
-    cap.set(cv2.CAP_PROP_GAIN,             0)
-
-def draw_overlay(frame, focus, num_tags):
+def draw_overlay(frame, num_tags, focus, manual_focus):
     overlay = frame.copy()
     w = frame.shape[1]
     cv2.rectangle(overlay, (0, 0), (w, 40), (0, 0, 0), -1)
     cv2.addWeighted(overlay, 0.5, frame, 0.5, 0, frame)
+    focus_str = f"Focus: {focus} (W/S)" if manual_focus else "Focus: AUTO"
     cv2.putText(frame,
-                f"Focus: {focus} (W/S)  |  SPACE = capture  |  Q = quit  |  Tags found: {num_tags}",
+                f"{focus_str}  |  F = toggle  |  SPACE = capture  |  Q = quit  |  Tags: {num_tags}",
                 (10, 28), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
 
 def detect_and_draw(frame, detector):
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     tags = detector.detect(gray)
-
-    # Filter low-confidence detections
     tags = [t for t in tags if t.decision_margin >= DECISION_MARGIN]
 
     for tag in tags:
@@ -54,15 +45,13 @@ def main():
     cap.set(cv2.CAP_PROP_FRAME_WIDTH,  1920)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
 
-    apply_manual_camera_settings(cap)
-
+    manual_focus = False
     focus = 0
-    cap.set(cv2.CAP_PROP_FOCUS, focus)
 
     detector = Detector(
         families="tag16h5",
         nthreads=4,
-        quad_decimate=1.0,   # full resolution for single-shot accuracy
+        quad_decimate=1.0,
         quad_sigma=0.0,
         refine_edges=1,
         decode_sharpening=0.25,
@@ -73,9 +62,8 @@ def main():
     cv2.namedWindow(win_name,  cv2.WINDOW_NORMAL)
     cv2.namedWindow(snap_name, cv2.WINDOW_NORMAL)
 
-    print("W/S = focus  |  SPACE = capture  |  Q = quit")
+    print("F = toggle focus  |  W/S = focus (manual)  |  SPACE = capture  |  Q = quit")
 
-    # Show live feed but don't detect until capture
     while True:
         ret, frame = cap.read()
         if not ret:
@@ -83,7 +71,7 @@ def main():
             break
 
         preview = frame.copy()
-        draw_overlay(preview, focus, num_tags=0)
+        draw_overlay(preview, num_tags=0, focus=focus, manual_focus=manual_focus)
         cv2.imshow(win_name, preview)
 
         key = cv2.waitKey(1) & 0xFF
@@ -91,23 +79,33 @@ def main():
         if key == ord('q'):
             break
 
-        elif key == ord(' '):
-            print(f"\nCapturing... (decision_margin threshold: {DECISION_MARGIN})")
-            snap = frame.copy()
-            snap, n = detect_and_draw(snap, detector)
-            draw_overlay(snap, focus, num_tags=n)
-            cv2.imshow(snap_name, snap)
-            print(f"Done — {n} tag(s) detected.\n")
+        elif key == ord('f'):
+            manual_focus = not manual_focus
+            if manual_focus:
+                cap.set(cv2.CAP_PROP_AUTOFOCUS, 0)
+                cap.set(cv2.CAP_PROP_FOCUS, focus)
+                print(f"Manual focus ON  (focus={focus})")
+            else:
+                cap.set(cv2.CAP_PROP_AUTOFOCUS, 1)
+                print("Autofocus ON")
 
-        elif key == ord('w'):
+        elif key == ord('w') and manual_focus:
             focus = min(FOCUS_MAX, focus + FOCUS_STEP)
             cap.set(cv2.CAP_PROP_FOCUS, focus)
             print(f"Focus: {focus}")
 
-        elif key == ord('s'):
+        elif key == ord('s') and manual_focus:
             focus = max(FOCUS_MIN, focus - FOCUS_STEP)
             cap.set(cv2.CAP_PROP_FOCUS, focus)
             print(f"Focus: {focus}")
+
+        elif key == ord(' '):
+            print(f"\nCapturing... (decision_margin threshold: {DECISION_MARGIN})")
+            snap = frame.copy()
+            snap, n = detect_and_draw(snap, detector)
+            draw_overlay(snap, num_tags=n, focus=focus, manual_focus=manual_focus)
+            cv2.imshow(snap_name, snap)
+            print(f"Done — {n} tag(s) detected.\n")
 
     cap.release()
     cv2.destroyAllWindows()
