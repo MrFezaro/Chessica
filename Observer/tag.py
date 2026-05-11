@@ -1,24 +1,4 @@
-#!/usr/bin/env python3
-"""
-AprilTag chess tracker — tag.py
---------------------------------
-Import usage:
-    import tag
-    tag.load_calibration()          # optional, fixes fisheye
-    tag.update_game_state()
-    print(tag.game_state)
-
-Standalone usage:
-    python tag.py
-    (B=define board  SPACE=update_game_state  Q=quit)
-
-Piece mapping (tag16h5):
-    White  0=farmer  1=knight  2=horse  11=bishop  4=queen  3=king
-    Black  5=farmer  6=knight  10=horse  7=bishop  9=queen  8=king
-"""
-
 import cv2
-import sys
 import numpy as np
 from pupil_apriltags import Detector
 
