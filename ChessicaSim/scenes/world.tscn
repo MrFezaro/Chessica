@@ -50,6 +50,7 @@ shadow_enabled = true
 
 [node name="UR5e" parent="." unique_id=1287074816 node_paths=PackedStringArray("target") instance=ExtResource("1_nnsk1")]
 transform = Transform3D(0.25, 0, 0, 0, -1.0927847e-08, -0.25, 0, 0.25, -1.0927847e-08, 0, 0, 0)
+serverAddress = "158.38.140.87"
 target = NodePath("../Marker3D")
 
 [node name="Camera3D" type="Camera3D" parent="." unique_id=15326251]

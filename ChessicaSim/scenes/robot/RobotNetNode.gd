@@ -1,3 +1,6 @@
+##Helper node for [Robot] to handle networking.
+##NOTE: Codesys Simulation Mode does not allow for networking.
+##It purely simulates logic.
 class_name RobotNetNode extends Node
 
 var positionOut : Vector3
@@ -41,11 +44,13 @@ func _readPacket() -> void:
 	if(availableData == 0):
 		return
 	
-	#Use get_data instead?
 	var incomingPacket : String = _streamPeer.get_string(availableData) 
 	
 	var startIndex = incomingPacket.find("(")
 	var endIndex = incomingPacket.find(")", startIndex)
+	if(startIndex == -1 || endIndex == -1):
+		return
+	
 	var extracted : String = incomingPacket.substr(startIndex, endIndex - startIndex)
 	
 	#Split packet
@@ -64,18 +69,16 @@ func _readPacket() -> void:
 func _ping() -> void:
 	var status : StreamPeerSocket.Status = _streamPeer.get_status()
 	if(status != StreamPeerSocket.Status.STATUS_CONNECTED):
-		print("Lost connection. Attempting reconnection.")
+		print("Attempting reconnection to: %s:%s." % [serverAddress, port])
 		reconnect()
 	return
 
 func _connectToServer() -> void:
 	var err : Error = _streamPeer.connect_to_host(serverAddress, port)
 	
-	if(err == OK && _streamPeer.get_status() == StreamPeerSocket.STATUS_CONNECTED):
-		print("Connected to server %s:%s" % [_streamPeer.get_connected_host(), _streamPeer.get_connected_port()])
-	elif(err == ERR_TIMEOUT):
-		print("Connection timed out.")
-	else:
-		print("Could not connect.")
+	#if(err == OK && _streamPeer.get_status() == StreamPeerSocket.STATUS_CONNECTED):
+	#	print("Connected to server %s:%s" % [_streamPeer.get_connected_host(), _streamPeer.get_connected_port()])
+	#else:
+	#	print("Could not connect.")
 	
 	return
