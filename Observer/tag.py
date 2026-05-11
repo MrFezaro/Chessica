@@ -10,11 +10,11 @@ Import usage:
 
 Standalone usage:
     python tag.py
-    (F=focus  W/S=focus  B=define board  SPACE=update_game_state  Q=quit)
+    (B=define board  SPACE=update_game_state  Q=quit)
 
 Piece mapping (tag16h5):
-    White  0=farmer  1=knight  2=horse  3=bishop  4=queen  5=king
-    Black  6=farmer  7=knight  8=horse  9=bishop 10=queen 11=king
+    White  0=farmer  1=knight  2=horse  11=bishop  4=queen  3=king
+    Black  5=farmer  6=knight  10=horse  7=bishop  9=queen  8=king
 """
 
 import cv2
@@ -24,17 +24,14 @@ from pupil_apriltags import Detector
 
 # ── Constants ──────────────────────────────────────────────────────────────
 DECISION_MARGIN = 30
-FOCUS_STEP      = 1
-FOCUS_MIN       = 0
-FOCUS_MAX       = 255
 BOARD_COLS      = 8
 BOARD_ROWS      = 8
 
 # ── Piece / colour lookup ───────────────────────────────────────────────────
 _WHITE_PIECES = {0: 'farmer', 1: 'knight', 2: 'horse',
-                 3: 'bishop', 4: 'queen',  5: 'king'}
-_BLACK_PIECES = {6: 'farmer', 7: 'knight', 8: 'horse',
-                 9: 'bishop', 10: 'queen', 11: 'king'}
+                 11: 'bishop', 4: 'queen',  3: 'king'}
+_BLACK_PIECES = {5: 'farmer', 6: 'knight', 10: 'horse',
+                 7: 'bishop', 9: 'queen',  8: 'king'}
 PIECE_MAP = {**_WHITE_PIECES, **_BLACK_PIECES}
 COLOR_MAP = {**{k: 'white' for k in _WHITE_PIECES},
              **{k: 'black' for k in _BLACK_PIECES}}
@@ -60,6 +57,10 @@ _perspective_M        = None
 # ══════════════════════════════════════════════════════════════════════════
 #  Public API
 # ══════════════════════════════════════════════════════════════════════════
+
+def init() -> None:
+    """Warm up the camera and detector without capturing. Call once on startup."""
+    _ensure_init()
 
 def load_calibration(path: str = "camera_calibration.npz") -> None:
     """
@@ -95,6 +96,7 @@ def update_game_state() -> dict:
     global game_state
     _ensure_init()
 
+    _cap.read() # flush stale buffered frame
     ret, frame = _cap.read()
     if not ret:
         print("tag: frame grab failed.")
@@ -159,11 +161,12 @@ def _ensure_init() -> None:
     if _cap is None:
         import platform
         backend = cv2.CAP_DSHOW if platform.system() == "Windows" else cv2.CAP_V4L2
-        _cap = cv2.VideoCapture(1, backend)
+        _cap = cv2.VideoCapture(0, backend) # Change camera index if you have multiple webcams
         if not _cap.isOpened():
             raise RuntimeError("tag: cannot open USB webcam.")
         _cap.set(cv2.CAP_PROP_FRAME_WIDTH,  1920)
         _cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+        _cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
         # Auto-load calibration from the same directory as this file
         import os
         cal_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "camera_calibration.npz")
@@ -266,18 +269,17 @@ def _mouse_cb(event, x, y, flags, param) -> None:
 
 
 # ── HUD overlay ────────────────────────────────────────────────────────────
-def _draw_overlay(frame, num_tags: int, focus: int, manual_focus: bool) -> None:
+def _draw_overlay(frame, num_tags: int) -> None:
     overlay = frame.copy()
     w = frame.shape[1]
     cv2.rectangle(overlay, (0, 0), (w, 42), (0, 0, 0), -1)
     cv2.addWeighted(overlay, 0.5, frame, 0.5, 0, frame)
-    focus_str = f"Focus:{focus}(W/S)" if manual_focus else "Focus:AUTO"
     board_str = "Board:SET" if _perspective_M is not None else "Board:--"
     cal_str   = "Cal:ON" if _undistort_map1 is not None else "Cal:--"
     mode_str  = "  <- click TL TR BR BL" if _defining_board else ""
     cv2.putText(
         frame,
-        f"{focus_str}  F=focus  B=board{mode_str}  SPACE=capture  Q=quit"
+        f"B=board{mode_str}  SPACE=capture  Q=quit"
         f"  |  Tags:{num_tags}  {board_str}  {cal_str}",
         (10, 29), cv2.FONT_HERSHEY_SIMPLEX, 0.65, (255, 255, 255), 2,
     )
@@ -345,9 +347,6 @@ def main() -> None:
 
     _ensure_init()
 
-    manual_focus = False
-    focus        = 0
-
     win_name  = "AprilTag - Live Preview"
     snap_name = "AprilTag - Captured"
     cv2.namedWindow(win_name,  cv2.WINDOW_NORMAL)
@@ -366,33 +365,13 @@ def main() -> None:
 
         preview = frame.copy()
         _draw_board_outline(preview)
-        _draw_overlay(preview, num_tags=0, focus=focus, manual_focus=manual_focus)
+        _draw_overlay(preview, num_tags=0)
         cv2.imshow(win_name, preview)
 
         key = cv2.waitKey(1) & 0xFF
 
         if key == ord('q'):
             break
-
-        elif key == ord('f'):
-            manual_focus = not manual_focus
-            if manual_focus:
-                _cap.set(cv2.CAP_PROP_AUTOFOCUS, 0)
-                _cap.set(cv2.CAP_PROP_FOCUS, focus)
-                print(f"Manual focus ON  (focus={focus})")
-            else:
-                _cap.set(cv2.CAP_PROP_AUTOFOCUS, 1)
-                print("Autofocus ON")
-
-        elif key == ord('w') and manual_focus:
-            focus = min(FOCUS_MAX, focus + FOCUS_STEP)
-            _cap.set(cv2.CAP_PROP_FOCUS, focus)
-            print(f"Focus: {focus}")
-
-        elif key == ord('s') and manual_focus:
-            focus = max(FOCUS_MIN, focus - FOCUS_STEP)
-            _cap.set(cv2.CAP_PROP_FOCUS, focus)
-            print(f"Focus: {focus}")
 
         elif key == ord('b'):
             _board_corners  = []
@@ -405,7 +384,7 @@ def main() -> None:
             update_game_state()
             snap = frame.copy()
             n = _annotate_snap(snap)
-            _draw_overlay(snap, num_tags=n, focus=focus, manual_focus=manual_focus)
+            _draw_overlay(snap, num_tags=n)
             cv2.imshow(snap_name, snap)
             print(f"Done — {n} tag(s).  game_state = {game_state}\n")
 

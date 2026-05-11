@@ -1,5 +1,9 @@
 import tag
 
-tag.update_game_state() # Presses "space" to Captures a frame and detect tags
+print("Initializing tag observer...")
+tag.init()
 
-print(tag.game_state)
+while True:
+    input("Press Enter to scan board...")
+    tag.update_game_state()
+    print(tag.game_state)
