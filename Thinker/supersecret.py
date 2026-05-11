@@ -35,12 +35,12 @@ def makeThing() -> str:
         "Making a sacrifice to the gods...",
         "Downloaded 1.34TB of cute animal pictures. Ah, almost forgot to calculate the next move, here you go:",
         "Wrangling internal cyber-neurons... or something",
-        "Ë̷̥͕́͒̓̍̚R̴̢̖͂̕͠͝R̶̛̹̪̦͒͝O̵̥̗̿̈́R̷̢̾̍:̴̞̰̈́̈́͠ ̶̜̍̑S̴̮̑̈́̍Ÿ̸̙́̒͠S̵͍̬̈́T̸̹͒̄E̸̳̍M̵͎̚ ̴̹̈́̄F̴̳̅Ą̷̎I̵̳̓L̷̲͠U̵̜̿R̶͙̽E̸̬͝",
+        "Ë̷̥͕́͒̓̍̚R̴̢̖͂̕͠͝R̶̛̹̪̦͒͝O̵̥̗̿̈́R̷̢̾̍:̴̞̰̈́̈́͠ ̶̜̍̑S̴̮̑̈́̍Ÿ̸̙́̒͠S̵͍̬̈́T̸̹͒̄E̸̳̍M̵͎̚ ̴̹̈́̄F̴̳̅Ą̷̎I̵̳̓L̷̲͠U̵̜̿R̶͙̽E̸̬͝   C̴o̷n̶t̴i̶n̵u̴i̸n̷g̵, what c̴o̶u̸l̷d̸ go w̶r̴o̵n̷g̸ anyways?",
         "[ WARNING ] A̷T̸E̴ ̴T̸O̸O̴ ̵M̷U̴C̴H̶ ̸R̵A̷M̶ T̵U̷M̷M̸Y̷ ̵O̷U̵C̶H̶I̵E",
         "Making a fake cake...",
         "Failing captcha tests...",
         "Insert more RAM to continue:",
-        "Feeling lazy, making a okayish move..."
+        "Feeling lazy, making an okayish move..."
         "*buzzing noises*",
         "Hungry for more RAM, might not calculate the next move if not fed",
         "Activating all 2 neurons to make the best move...    Warning: Neuron_1 failed",
