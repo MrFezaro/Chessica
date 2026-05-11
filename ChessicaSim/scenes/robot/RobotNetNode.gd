@@ -9,15 +9,19 @@ var port : int
 var _pingTimer : Timer = Timer.new()
 var _streamPeer : StreamPeerTCP = StreamPeerTCP.new()
 
+func getConnectionStatus() -> StreamPeerSocket.Status:
+	return _streamPeer.get_status()
+
 func reconnect() -> void:
 	_connectToServer()
 	return
 
 func _ready() -> void:
-	_pingTimer.wait_time = 5
+	_pingTimer.wait_time = 1
 	_pingTimer.autostart = true
 	_pingTimer.one_shot = false
 	_pingTimer.timeout.connect(_ping)
+	add_child(_pingTimer)
 	return
 
 func _process(delta : float) -> void:
@@ -29,43 +33,49 @@ func _process(delta : float) -> void:
 
 #TODO Needs testing
 func _readPacket() -> void:
-	#According to Codesys, floats are sent as float32 and bools as 1 byte
+	#PLC sends data as a STRING, formatted as:
+	#(x.x,y.y,z.z,g.g)
+	#Every number is separated by , and sent with 6 decimals.
 	
-	#TODO: Test
-	var result : Array = _streamPeer.get_data(3*4 + 1)
-	var err : Error = result[0]
-	if(err == OK):
-		var data : PackedByteArray = result[1]
-		positionOut.x = data.decode_float(0)
-		positionOut.y = data.decode_float(4*1)
-		positionOut.z = data.decode_float(4*2)
-		gripOut = data.decode_u8(4*2 + 1) > 0 #Into bool
+	var availableData : int = _streamPeer.get_available_bytes()
+	if(availableData == 0):
+		return
+	
+	#Use get_data instead?
+	var incomingPacket : String = _streamPeer.get_string(availableData) 
+	
+	var startIndex = incomingPacket.find("(")
+	var endIndex = incomingPacket.find(")", startIndex)
+	var extracted : String = incomingPacket.substr(startIndex, endIndex - startIndex)
+	
+	#Split packet
+	var vec : PackedFloat64Array = extracted.split_floats(",", false)
+	
+	if(vec.size() == 4):
+		positionOut.x = vec[0]
+		positionOut.y = vec[1]
+		positionOut.z = vec[2]
+		gripOut = vec[3] > 0 #Into bool
 	else:
-		print("Error '%s' occurred when getting packet." % error_string(err))
+		print("Packet size invalid (vec.size() =/= 4).")
+	
 	return
 
 func _ping() -> void:
 	var status : StreamPeerSocket.Status = _streamPeer.get_status()
-	if(status == StreamPeerSocket.Status.STATUS_ERROR):
-		print("Connection error. Attempting reconnection.")
-		_connectToServer()
+	if(status != StreamPeerSocket.Status.STATUS_CONNECTED):
+		print("Lost connection. Attempting reconnection.")
+		reconnect()
 	return
 
 func _connectToServer() -> void:
-	_pingTimer.paused = true
 	var err : Error = _streamPeer.connect_to_host(serverAddress, port)
-	while _streamPeer.poll() != OK:
-		if(err == ERR_CANT_CONNECT || err == ERR_CONNECTION_ERROR):
-			print("Connection error '%s'. Retrying." % error_string(err))
-			
-		err =  _streamPeer.connect_to_host(serverAddress, port)
-		
-	if(err == OK):
+	
+	if(err == OK && _streamPeer.get_status() == StreamPeerSocket.STATUS_CONNECTED):
 		print("Connected to server %s:%s" % [_streamPeer.get_connected_host(), _streamPeer.get_connected_port()])
 	elif(err == ERR_TIMEOUT):
 		print("Connection timed out.")
 	else:
 		print("Could not connect.")
 	
-	_pingTimer.paused = false
 	return
