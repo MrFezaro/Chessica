@@ -18,7 +18,7 @@ COLOR_MAP = {**{k: 'white' for k in _WHITE_PIECES},
 
 # ── Public game state ──────────────────────────────────────────────────────
 game_state: dict = {}
-# { "e4": {"piece": "farmer", "color": "white", "tag_id": 0}, … }
+# { "e4": {"piece": "pawn", "color": "white", "tag_id": 0}, … }
 
 # ── Shared camera / detector (lazy init) ───────────────────────────────────
 _cap      = None
