@@ -8,9 +8,9 @@ BOARD_COLS      = 8
 BOARD_ROWS      = 8
 
 # ── Piece / colour lookup ───────────────────────────────────────────────────
-_WHITE_PIECES = {0: 'farmer', 1: 'knight', 2: 'horse',
+_WHITE_PIECES = {0: 'pawn', 1: 'rook', 2: 'horse',
                  11: 'bishop', 4: 'queen',  3: 'king'}
-_BLACK_PIECES = {5: 'farmer', 6: 'knight', 10: 'horse',
+_BLACK_PIECES = {5: 'pawn', 6: 'rook', 10: 'horse',
                  7: 'bishop', 9: 'queen',  8: 'king'}
 PIECE_MAP = {**_WHITE_PIECES, **_BLACK_PIECES}
 COLOR_MAP = {**{k: 'white' for k in _WHITE_PIECES},
