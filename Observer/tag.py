@@ -42,6 +42,7 @@ def init() -> None:
     """Warm up the camera and detector without capturing. Call once on startup."""
     _ensure_init()
 
+
 def load_calibration(path: str = "camera_calibration.npz") -> None:
     """
     Load camera calibration produced by calibrate.py and precompute
@@ -67,16 +68,17 @@ def load_calibration(path: str = "camera_calibration.npz") -> None:
     print(f"Calibration loaded from '{path}'  ({int(w)}x{int(h)})")
 
 
-def update_game_state() -> dict:
+def update_game_state(show: bool = False) -> dict:
     """
     Grab one frame from the camera, detect AprilTags, and update game_state.
     Returns the updated game_state dict.
-    Works both when called from your own script and from the live preview loop.
+
+    show=True  — opens/refreshes an annotated window showing detected tags.
     """
     global game_state
     _ensure_init()
 
-    _cap.read() # flush stale buffered frame
+    _cap.read()  # flush stale buffered frame
     ret, frame = _cap.read()
     if not ret:
         print("tag: frame grab failed.")
@@ -108,6 +110,16 @@ def update_game_state() -> dict:
         }
 
     game_state = new_state
+
+    if show:
+        snap = frame.copy()
+        n = _annotate_snap(snap)
+        _draw_board_outline(snap)
+        _draw_overlay(snap, num_tags=n)
+        cv2.namedWindow("AprilTag - Captured", cv2.WINDOW_NORMAL)
+        cv2.imshow("AprilTag - Captured", snap)
+        cv2.waitKey(1)
+
     return game_state
 
 
@@ -141,7 +153,7 @@ def _ensure_init() -> None:
     if _cap is None:
         import platform
         backend = cv2.CAP_DSHOW if platform.system() == "Windows" else cv2.CAP_V4L2
-        _cap = cv2.VideoCapture(0, backend) # Change camera index if you have multiple webcams
+        _cap = cv2.VideoCapture(0, backend)  # Change camera index if you have multiple webcams
         if not _cap.isOpened():
             raise RuntimeError("tag: cannot open USB webcam.")
         _cap.set(cv2.CAP_PROP_FRAME_WIDTH,  1920)
