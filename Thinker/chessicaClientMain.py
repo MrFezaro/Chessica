@@ -12,6 +12,8 @@ import supersecret
 DEBUG_COMMAND_PREFIX : str = "CMD_"
 DEBUG_COMMANDS : list = ["it_queens", "it_capture", "reset"]
 
+CONSOLE_PREFIX : str = "chessica >"
+
 #Whether console commands should be enabled.
 useConsoleCommands : bool = True
 
@@ -238,19 +240,23 @@ debug [cmd] \t | Accepts a non-chess command that interacts more directly with t
                 #Awaits PLC to give a ready signal before deducing opponent's move and executing own move
                 #Only on rising edge
                 if(not coldboot and await nodeReady.read_value()):
-                    #TODO: Shove in camera vision code
-                    #Read board status (camera): afterOpponentMove
-                    #Check if move is legal (get data from camera)
-                    #If NOT legal: give some sort of error signal
+                    err = chessimind.openYourEyeAndSee()
+                    if(err == brain.MSE_NO_CHANGE):
+                        continue
 
-                    #else if legal: Perform own move as usual
+                    if(err != brain.MSE_OK):
+                        print("Could not SEE valid move! Cheating?")
+                        #Send alarm to PLC
+                        continue
+
+                    print(f"I can SEE {chessimind.board.peek().uci()}")
                     move = chessimind.makeMove()
                     await sendMove(move)
                     await sendExecute()
-                    #Read board status (camera): beforeOpponentMove
                     continue
+                
                 elif(useConsoleCommands):
-                    await inputCommand(await async_input("chessica >"))
+                    await inputCommand(await async_input(CONSOLE_PREFIX))
                     pass
 
                 coldboot = False

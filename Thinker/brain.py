@@ -1,3 +1,9 @@
+import typing
+from typing import ClassVar, Callable, Counter, Dict, Generic, Hashable, Iterable, Iterator, List, Literal, Mapping, Optional, SupportsInt, Tuple, Type, TypeVar, Union
+
+if typing.TYPE_CHECKING:
+    from typing_extensions import Self, TypeAlias
+
 import chess
 import chess.engine
 import chess.pgn
@@ -6,12 +12,25 @@ from Observer import tag
 
 #Convert a camera piece to chess library piece type.
 CAM_PIECE_TO_CHESS_PIECE : dict = {
-    "farmer" : chess.PAWN,
-    "knight" : chess.KNIGHT,
+    "pawn" : chess.PAWN,
+    "horse" : chess.KNIGHT,
+    "rook" : chess.ROOK,
+    "bishop" : chess.BISHOP,
+    "queen" : chess.QUEEN,
+    "king" : chess.KING
 }
+
+#Python has no enums so here we go
+MoveSearchStatus: TypeAlias = int
+MSE_OK : MoveSearchStatus = 0
+MSE_ERROR : MoveSearchStatus = -1 #Illegal move
+MSE_NO_CHANGE : MoveSearchStatus = 1 #No change.
 
 class Brain:
     _engine : chess.engine.SimpleEngine = chess.engine.SimpleEngine.popen_uci(r"C:/_dev/Chessica/Thinker/stockfish-windows-x86-64-avx2/stockfish-windows-x86-64-avx2.exe")
+    
+    showVisionWindow : bool = True
+    
     board : chess.Board = None
     previousBoard : chess.Board = None
     #How deep should the engine explore, e.g. how many steps in the future.
@@ -84,30 +103,41 @@ class Brain:
 
         return moveResult
 
-    def openYourEyeAndSee() -> None:
+    def openYourEyeAndSee(self) -> MoveSearchStatus:
         """
-        I'm just a poor bot, I need no sympathy
-        Because I'm easy come, easy go
-        Little high, little low
-        Any way the piece moves doesn't really matter to me, to me
-        Mama, just took a knight
-        Put a pawn against his head, pushed him nearer, now he's dead
-
-        (uses camera vision to get physical game state)
+        
+        I'm just a poor bot, I need no sympathy \n
+        Because I'm easy come, easy go \n
+        Little high, little low \n
+        Any way the piece goes doesn't really matter to me... \n
+        To me... \n
+        Mama, just took a knight \n
+        Put a pawn against his head, pushed him off, now he's dead \n
+        \n
+        Uses camera vision to apply opponent's move to internal state.
+        Returns a `MoveSearchStatus`.
         """
-        physState = tag.update_game_state()
+        newBoard = self.cameraBoardToChessBoard(tag.update_game_state(show = self.showVisionWindow))
+        status, move = self.searchForMove(self.board, newBoard)
+        status : MoveSearchStatus = status #Type hinting
+        move : chess.Move = move
+        if(status == MSE_OK):
+            print(f"Saw move: {move.uci()}")
+            self.board.push(move)
+        else:
+            print(f"Could not find move! Cheating?")
 
-        return
+        return status
 
-    def cameraBoardToChessBoard(self, boardDict : dict) -> chess.Board:
+    def cameraBoardToChessBoard(self, boardDict : dict[str, dict]) -> chess.Board:
         """
         Converts a dictionary representing the board gained from camera vision into
-        a :class:`~chess.Board` without history.
+        a :class:`~chess.Board` without a move stack.
         Expects the dictionary format to be as Dict<str, Dict>, that is:
         ```
         { 
             "e4": {
-                "piece": "farmer", 
+                "piece": "pawn", 
                 "color": "white", 
                 "tag_id": 0
             }
@@ -119,66 +149,46 @@ class Brain:
         squarePieceDict = {}
         for move, data in boardDict:
             square : chess.Square = chess.parse_square(move)
-            pieceType : chess.PieceType =
+            pieceType : chess.PieceType = CAM_PIECE_TO_CHESS_PIECE[data[piece]]
             piece : chess.Piece = chess.Piece(
                 pieceType,
                 data["color"] == "white"
             )
+            squarePieceDict[square] = piece
 
         physBoard = chess.Board.empty()
         
-        physBoard.set_piece_map()
+        physBoard.set_piece_map(squarePieceDict)
+        return physBoard
 
+    def searchForMove(self, oldBoard : chess.Board, newBoard : chess.Board) -> Tuple:
+        """
+        Searches for the move that leads from `oldBoard` to `newBoard`.
+        Does not modify `oldBoard`.
+        Not intended to search more than 1 ply.
+        (This is more flexxible and easier to code compared to difficult deduction code)
+
+        Returns a tuple of `(MoveSearchStatus, chess.Move)`
+        """
+        status : MoveSearchStatus = MSE_ERROR
+        move = chess.Move.null()
+
+        if(oldBoard.fen() == newBoard.fen()):
+            status = MSE_NO_CHANGE
+            return (status, move)
+
+        workBoard = oldBoard.copy()
+
+        for m in workBoard.legal_moves():
+            workBoard.push(m)
+            if(workBoard.fen() == newBoard.fen()):
+                status = MSE_OK
+                move = m
+                break
         
-            
+        return (status, move)
 
-        return
-
-    ###!WARNING!   WIP - UNTESTED  and also huge TODO###
-    ##AWAITING CAMERA VISION TO IMPLEMENT THIS
-    #Deduces the chess move made by the opponent by comparing the newBoard to the previous board (in memory).
-    #In fancy terms, it acquires the delta of the boards.
-    #Also checks if whatever move was made by the opponent was valid! If not, it will output and propagate an alarm signal to the PLC.
-    def deduceOpponentMove(self, newBoard : chess.Board) -> chess.Move:
-        #Figure out how to get the delta
-        #A piece ALWAYS has to vanish from one square and appear on another
-        #If a piece has moved: sum of pieces remains the same. 
-        # - 1 previously filled tile is empty, 1 previously empty is filled.
-        #If a piece has attacked: sum of pieces is one less
-        # - 1 previously filled tile is empty, 1 tile has changed piece colors.
-        newMap = newBoard.piece_map()
-        map = self.board.piece_map()
-        
-        move : chess.Move = chess.Move.null()
-        wasAttack = False
-
-        #Calculate deltamove
-        #TODO: Deduce castling! (king switches places with tower/rook)
-        #TODO: Deduce promotion! (pawn reaches end of board)
-        #TODO: Deduce en passant (low priority)
-        for square in range(chess.H8): #H8 = 63, last tile
-            new : chess.Piece = None
-            if(square in newMap): new = newMap[square]
-
-            old : chess.Piece = None
-            if(square in map): old = map[square]
-
-            if(old != new):
-                wasAttack = (old != None and new != None) and (new.color != old.color)
-
-                if(old != None and new == None): #Moved from
-                    move.from_square = square
-
-                elif((old == None and new != None) or wasAttack): #Moved to OR attacked
-                    move.to_square = square
-                
-                if(move.from_square != -1 and move.to_square != -1):
-                    piece = new
-                    break
-
-        return move
-
-    #Applies a move to he board
+    #Applies a move to the board
     def applyMove(self, move : chess.Move) -> None:
         self.previousBoard = self.board.copy()
         self.board.push(move)
@@ -220,23 +230,6 @@ class Brain:
         print("Loading default camera calibration file")
         tag.load_calibration()
         return
-
-    def _isMoveValid() -> bool:
-        return False
-
-    def _deducePromotion() -> bool:
-        return
     
-    def _deduceCastling() -> bool:
-        return
-    
-    def _deduceEnPassant() -> bool:
-        return
-    
-    def _deduceCapture() -> bool:
-        return
-    
-    def _deduceMove() -> bool:
-        return
 pass
 
