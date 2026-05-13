@@ -2,6 +2,13 @@ import chess
 import chess.engine
 import chess.pgn
 from pathlib import Path
+from Observer import tag
+
+#Convert a camera piece to chess library piece type.
+CAM_PIECE_TO_CHESS_PIECE : dict = {
+    "farmer" : chess.PAWN,
+    "knight" : chess.KNIGHT,
+}
 
 class Brain:
     _engine : chess.engine.SimpleEngine = chess.engine.SimpleEngine.popen_uci(r"C:/_dev/Chessica/Thinker/stockfish-windows-x86-64-avx2/stockfish-windows-x86-64-avx2.exe")
@@ -76,6 +83,56 @@ class Brain:
             moveResult += capturedPieceType
 
         return moveResult
+
+    def openYourEyeAndSee() -> None:
+        """
+        I'm just a poor bot, I need no sympathy
+        Because I'm easy come, easy go
+        Little high, little low
+        Any way the piece moves doesn't really matter to me, to me
+        Mama, just took a knight
+        Put a pawn against his head, pushed him nearer, now he's dead
+
+        (uses camera vision to get physical game state)
+        """
+        physState = tag.update_game_state()
+
+        return
+
+    def cameraBoardToChessBoard(self, boardDict : dict) -> chess.Board:
+        """
+        Converts a dictionary representing the board gained from camera vision into
+        a :class:`~chess.Board` without history.
+        Expects the dictionary format to be as Dict<str, Dict>, that is:
+        ```
+        { 
+            "e4": {
+                "piece": "farmer", 
+                "color": "white", 
+                "tag_id": 0
+            }
+        }
+        ```
+        This should later be used to get a delta board.
+        """
+
+        squarePieceDict = {}
+        for move, data in boardDict:
+            square : chess.Square = chess.parse_square(move)
+            pieceType : chess.PieceType =
+            piece : chess.Piece = chess.Piece(
+                pieceType,
+                data["color"] == "white"
+            )
+
+        physBoard = chess.Board.empty()
+        
+        physBoard.set_piece_map()
+
+        
+            
+
+        return
 
     ###!WARNING!   WIP - UNTESTED  and also huge TODO###
     ##AWAITING CAMERA VISION TO IMPLEMENT THIS
@@ -154,6 +211,32 @@ class Brain:
 
         Path("./Thinker/Games/").mkdir(parents=True, exist_ok=True)
         print(game, file=open(f"./Thinker/Games/{filename}.pgn", "x"), end="\n\n")
+        return
+
+    def _initCameraVision() -> None:
+        print("Initializing tag observer...")
+        tag.init()
+        
+        print("Loading default camera calibration file")
+        tag.load_calibration()
+        return
+
+    def _isMoveValid() -> bool:
+        return False
+
+    def _deducePromotion() -> bool:
+        return
+    
+    def _deduceCastling() -> bool:
+        return
+    
+    def _deduceEnPassant() -> bool:
+        return
+    
+    def _deduceCapture() -> bool:
+        return
+    
+    def _deduceMove() -> bool:
         return
 pass
 
