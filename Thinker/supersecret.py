@@ -43,7 +43,7 @@ def makeThing() -> str:
         "Feeling lazy, making an okayish move..."
         "*buzzing noises*",
         "Hungry for more RAM, might not calculate the next move if not fed",
-        "Activating all 2 neurons to make the best move...    Warning: Neuron_1 failed",
+        "Activating all 2 neurons to make the best move...\nWarning: Neuron_1 failed",
         "Grabbing random move from a command block...",
         "Letting a monkey with a dart decide the next move...",
         "I think I wrote that move down somewhere around here...",
