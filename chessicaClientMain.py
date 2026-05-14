@@ -215,6 +215,7 @@ debug [cmd] \t | Accepts a non-chess command that interacts more directly with t
     print(f"Connecting to {url} ...")
 
     client = Client(url)
+    
     try:
         #____ Connect to OPC-UA server ____
         client.set_user(username)
@@ -230,6 +231,7 @@ debug [cmd] \t | Accepts a non-chess command that interacts more directly with t
         nodeMoveExecute = client.get_node(nodeMoveExecuteId)
 
         chessimind = brain.Brain(BOT_DEPTH, initialChessBoard)
+        chessimind.showVisionWindow = True
 
         coldboot : bool = True
         wannaExit : bool = False

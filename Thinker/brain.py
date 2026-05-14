@@ -2,6 +2,7 @@ import typing
 from typing import ClassVar, Callable, Counter, Dict, Generic, Hashable, Iterable, Iterator, List, Literal, Mapping, Optional, SupportsInt, Tuple, Type, TypeVar, Union
 from typing_extensions import Self, TypeAlias
 
+import os
 import chess
 import chess.engine
 import chess.pgn
@@ -146,9 +147,14 @@ class Brain:
         """
 
         squarePieceDict = {}
-        for move, data in boardDict:
-            square : chess.Square = chess.parse_square(move)
-            pieceType : chess.PieceType = CAM_PIECE_TO_CHESS_PIECE[data[piece]]
+        print(f"{boardDict = }")
+        for key in boardDict:
+            data = boardDict[key]
+            if(data["square"] == None): #Skip pieces outside board
+                continue
+
+            square : chess.Square = chess.parse_square(data["square"])
+            pieceType : chess.PieceType = CAM_PIECE_TO_CHESS_PIECE[data["piece"]]
             piece : chess.Piece = chess.Piece(
                 pieceType,
                 data["color"] == "white"
@@ -178,7 +184,12 @@ class Brain:
 
         workBoard = oldBoard.copy()
 
-        for m in workBoard.legal_moves():
+        for m in workBoard.legal_moves:
+            if(workBoard.piece_at(m.from_square) == None):
+                #Raise alarm, order PLC to move robot
+                #Then, take a picture from a different angle
+                continue #TEMPORARY skip this. This CAN give faulty results!
+
             workBoard.push(m)
             if(workBoard.fen() == newBoard.fen()):
                 status = MSE_OK
@@ -226,8 +237,8 @@ class Brain:
         print("Initializing tag observer...")
         tag.init()
         
-        print("Loading default camera calibration file")
-        tag.load_calibration()
+        print("Loading camera calibration file")
+        tag.load_calibration(os.getcwd() + "/Observer/camera_calibration.npz")
         return
     
 pass
