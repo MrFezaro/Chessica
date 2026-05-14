@@ -6,8 +6,7 @@ import datetime
 import asyncio
 import chess
 from asyncua import Client
-import brain
-import supersecret
+from Thinker import brain, supersecret
 
 DEBUG_COMMAND_PREFIX : str = "CMD_"
 DEBUG_COMMANDS : list = ["it_queens", "it_capture", "reset"]

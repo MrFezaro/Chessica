@@ -1,8 +1,6 @@
 import typing
 from typing import ClassVar, Callable, Counter, Dict, Generic, Hashable, Iterable, Iterator, List, Literal, Mapping, Optional, SupportsInt, Tuple, Type, TypeVar, Union
-
-if typing.TYPE_CHECKING:
-    from typing_extensions import Self, TypeAlias
+from typing_extensions import Self, TypeAlias
 
 import chess
 import chess.engine
@@ -38,6 +36,7 @@ class Brain:
     timePerMove = 0.01 #In seconds
 
     def __init__(self, searchDepth : int, initialBoard : chess.Board):
+        self._initCameraVision()
         self._engine.options["Depth"] = searchDepth
         self.board = initialBoard
         return
@@ -223,7 +222,7 @@ class Brain:
         print(game, file=open(f"./Thinker/Games/{filename}.pgn", "x"), end="\n\n")
         return
 
-    def _initCameraVision() -> None:
+    def _initCameraVision(self) -> None:
         print("Initializing tag observer...")
         tag.init()
         
