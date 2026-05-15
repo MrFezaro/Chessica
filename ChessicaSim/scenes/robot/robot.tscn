@@ -101,7 +101,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 4.371139e-08, 0, -4.371139e-08, 1, 0, -0.
 [node name="CCDIK3D" type="CCDIK3D" parent="Armature/Skeleton3D" parent_id_path=PackedInt32Array(430261051) index="6" unique_id=1038933020]
 max_iterations = 40
 min_distance = 0.01
-angular_delta_limit = 0.008726646259971648
+angular_delta_limit = 0.017453292519943295
 setting_count = 1
 settings/0/target_node = NodePath("")
 settings/0/root_bone_name = "J1"
