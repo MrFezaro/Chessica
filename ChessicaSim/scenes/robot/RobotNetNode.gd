@@ -19,6 +19,12 @@ func reconnect() -> void:
 	_connectToServer()
 	return
 
+func sendPacket(posNGrip : Vector4) -> void:
+	var msg = str(posNGrip)
+	msg = msg.replace(" ", "")
+	_streamPeer.put_string(msg)
+	return
+
 func _ready() -> void:
 	_pingTimer.wait_time = 1
 	_pingTimer.autostart = true
@@ -45,8 +51,9 @@ func _readPacket() -> void:
 		return
 	
 	var incomingPacket : String = _streamPeer.get_string(availableData) 
+	print("Received: %s" % incomingPacket)
 	
-	var startIndex = incomingPacket.find("(")
+	var startIndex = incomingPacket.find("(")+1
 	var endIndex = incomingPacket.find(")", startIndex)
 	if(startIndex == -1 || endIndex == -1):
 		return

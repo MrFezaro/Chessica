@@ -241,7 +241,8 @@ debug [cmd] \t | Accepts a non-chess command that interacts more directly with t
                 #Awaits PLC to give a ready signal before deducing opponent's move and executing own move
                 #Only on rising edge
                 if(not coldboot and await nodeReady.read_value()):
-                    err = chessimind.openYourEyeAndSee()
+                    #Temporary disabling of vision to test simulator
+                    err = brain.MSE_OK #chessimind.openYourEyeAndSee()
                     if(err == brain.MSE_NO_CHANGE):
                         continue
 
@@ -250,7 +251,7 @@ debug [cmd] \t | Accepts a non-chess command that interacts more directly with t
                         #Send alarm to PLC
                         continue
 
-                    print(f"I can SEE {chessimind.board.peek().uci()}")
+                    #print(f"Saw {chessimind.board.peek().uci()}")
                     move = chessimind.makeMove()
                     await sendMove(move)
                     await sendExecute()
