@@ -56,7 +56,7 @@ func _process(delta : float) -> void:
 			target.global_position.z,
 			target.global_position.y)
 		
-		if(shadowMode):
+		if(!shadowMode):
 			_sendFeedback()
 	return
 
