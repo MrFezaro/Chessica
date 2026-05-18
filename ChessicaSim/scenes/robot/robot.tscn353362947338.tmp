@@ -1,0 +1,144 @@
+[gd_scene format=3 uid="uid://c3oqats8qf56d"]
+
+[ext_resource type="PackedScene" uid="uid://6ph68j3wjkwo" path="res://assets/UR7e/UR7e.glb" id="1_eh0qr"]
+[ext_resource type="Script" uid="uid://bw6xcnb8bixfr" path="res://scenes/robot/Robot.gd" id="2_ay6cs"]
+[ext_resource type="Script" uid="uid://d0enjyv1cwel4" path="res://scenes/robot/Gripper.gd" id="3_h6cnt"]
+[ext_resource type="Script" uid="uid://ugekfldx15t0" path="res://scenes/robot/RobotNetNode.gd" id="3_weiqw"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_weiqw"]
+size = Vector3(0.5, 0.5, 0.5)
+
+[sub_resource type="BoxMesh" id="BoxMesh_h6cnt"]
+size = Vector3(0.1, 0.4, 0.3)
+
+[sub_resource type="JointLimitationCone3D" id="JointLimitationCone3D_ay6cs"]
+angle = 0.0
+
+[sub_resource type="JointLimitationCone3D" id="JointLimitationCone3D_weiqw"]
+angle = 0.0
+
+[sub_resource type="JointLimitationCone3D" id="JointLimitationCone3D_h6cnt"]
+angle = 0.0
+
+[sub_resource type="JointLimitationCone3D" id="JointLimitationCone3D_3st38"]
+angle = 0.0
+
+[sub_resource type="JointLimitationCone3D" id="JointLimitationCone3D_gnvke"]
+
+[node name="UR5e2" unique_id=940393880 instance=ExtResource("1_eh0qr")]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0)
+script = ExtResource("2_ay6cs")
+
+[node name="Armature" parent="." index="0" unique_id=1978604372]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 0, 0)
+
+[node name="J6" parent="Armature/Skeleton3D" parent_id_path=PackedInt32Array(430261051) index="0" unique_id=1725414996]
+transform = Transform3D(-1, 2.842171e-14, 1.9895197e-13, 1.9895195e-13, 1.8626451e-08, 0.99999976, -1.312473e-21, 0.99999976, -1.8626451e-08, 5.1333785e-13, 9.800861, 2.3774996)
+bone_name = "tip"
+bone_idx = 8
+
+[node name="UR7e L6" parent="Armature/Skeleton3D/J6" index="0" unique_id=442522667]
+transform = Transform3D(-1, 5.7065463e-14, 5.6510352e-14, 5.7065463e-14, 1, -1.7867187e-08, -5.6510352e-14, -1.7867187e-08, -1, 5.6510354e-15, -0.64, -0.030000001)
+
+[node name="GripperBase" type="MeshInstance3D" parent="Armature/Skeleton3D/J6" index="1" unique_id=704583789]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 0)
+mesh = SubResource("BoxMesh_weiqw")
+script = ExtResource("3_h6cnt")
+
+[node name="Endpoint" type="Node3D" parent="Armature/Skeleton3D/J6/GripperBase" index="0" unique_id=587616503]
+transform = Transform3D(1, 0, -1.4081923e-20, 2.019484e-28, 1, 0, -1.3552527e-20, 0, 1, 0, 0.5, 0)
+
+[node name="Finger1" type="MeshInstance3D" parent="Armature/Skeleton3D/J6/GripperBase/Endpoint" index="0" unique_id=220071214]
+transform = Transform3D(1, 0, -1.4081923e-20, -1.009742e-28, 1, 0, -1.3552527e-20, 0, 1, 0.2, -0.10000002, 0)
+mesh = SubResource("BoxMesh_h6cnt")
+
+[node name="Finger2" type="MeshInstance3D" parent="Armature/Skeleton3D/J6/GripperBase/Endpoint" index="1" unique_id=1690538804]
+transform = Transform3D(1, 0, -1.4081923e-20, -1.009742e-28, 1, 0, -1.3552527e-20, 0, 1, -0.2, -0.10000002, 0)
+mesh = SubResource("BoxMesh_h6cnt")
+
+[node name="EndEffector" type="Marker3D" parent="Armature/Skeleton3D/J6" index="2" unique_id=132569472]
+
+[node name="J5" parent="Armature/Skeleton3D" parent_id_path=PackedInt32Array(430261051) index="1" unique_id=1390068583]
+transform = Transform3D(-1, 2.842171e-14, 1.3122836e-13, 1.3122836e-13, 1.816079e-08, 0.99999976, 0, 0.99999976, -1.816079e-08, 4.8382197e-13, 9.800861, 1.3390014)
+bone_name = "J6"
+bone_idx = 7
+
+[node name="UR7e L5" parent="Armature/Skeleton3D/J5" index="0" unique_id=421310886]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 0, 0.04, -0.56)
+
+[node name="J4" parent="Armature/Skeleton3D" parent_id_path=PackedInt32Array(430261051) index="2" unique_id=1081079465]
+transform = Transform3D(-1, 1.1368684e-13, 3.8941445e-07, -1.9521735e-09, 0.9999872, -0.0050133634, -3.8940948e-07, -0.0050133634, -0.9999872, 3.4270443e-13, 8.803862, 1.3439999)
+bone_name = "J5"
+bone_idx = 6
+
+[node name="UR7e L4" parent="Armature/Skeleton3D/J4" index="0" unique_id=1498770442]
+transform = Transform3D(-1, -8.742278e-08, 3.821371e-15, 0, -4.371139e-08, -1, 8.742278e-08, -1, 4.371139e-08, 0, -0.08, 0.8)
+
+[node name="J3" parent="Armature/Skeleton3D" parent_id_path=PackedInt32Array(430261051) index="3" unique_id=954477027]
+transform = Transform3D(-1, 8.526513e-14, 3.8941442e-07, 4.2632564e-14, 0.99999976, -1.7955697e-08, -3.8941434e-07, -1.7955756e-08, -0.99999976, 8.4862733e-14, 4.8838634, 3.5762787e-07)
+bone_name = "Static2"
+bone_idx = 4
+
+[node name="UR7e L3" parent="Armature/Skeleton3D/J3" index="0" unique_id=1517996809]
+transform = Transform3D(-1, -1.509958e-07, 0, 0, 1.9745997e-08, -1, 1.509958e-07, -1, -1.9745999e-08, 0, 0, -0.75)
+
+[node name="J2" parent="Armature/Skeleton3D" parent_id_path=PackedInt32Array(430261051) index="4" unique_id=2062145294]
+transform = Transform3D(1, 2.1316282e-14, -2.8431152e-15, -2.1316282e-14, 0.9999999, -3.3967208e-07, 4.2351647e-22, 3.3967208e-07, 0.9999999, 0, 0.63400006, 1.344)
+bone_name = "Static1"
+bone_idx = 2
+
+[node name="UR7e L2" parent="Armature/Skeleton3D/J2" index="0" unique_id=6716211]
+transform = Transform3D(1, 8.7422784e-08, 7.1054274e-15, 0, -1.2928041e-09, -1, -8.742277e-08, 1, -1.2928041e-09, 0, 0, -0.599)
+
+[node name="J1" parent="Armature/Skeleton3D" parent_id_path=PackedInt32Array(430261051) index="5" unique_id=742511148]
+transform = Transform3D(1, 0, -8.7422784e-08, -8.7422784e-08, 1.7955745e-08, -1, 1.5697413e-15, 1, 1.7955745e-08, 0, 0.634, -1.138395e-08)
+bone_name = "J2"
+bone_idx = 1
+
+[node name="UR7e L1" parent="Armature/Skeleton3D/J1" index="0" unique_id=1010033115]
+transform = Transform3D(1, 0, 0, 0, 1, 4.371139e-08, 0, -4.371139e-08, 1, 0, -0.0009999566, 0.7)
+
+[node name="CCDIK3D" type="CCDIK3D" parent="Armature/Skeleton3D" parent_id_path=PackedInt32Array(430261051) index="6" unique_id=1038933020]
+max_iterations = 80
+min_distance = 0.01
+angular_delta_limit = 0.017453292519943295
+setting_count = 1
+settings/0/target_node = NodePath("")
+settings/0/root_bone_name = "J1"
+settings/0/root_bone = 0
+settings/0/end_bone_name = "tip"
+settings/0/end_bone = 8
+settings/0/extend_end_bone = false
+settings/0/joint_count = 9
+settings/0/joints/0/rotation_axis = 2
+settings/0/joints/0/limitation = SubResource("JointLimitationCone3D_ay6cs")
+settings/0/joints/0/limitation/right_axis = 0
+settings/0/joints/0/limitation/rotation_offset = Quaternion(0, 0, 0, 1)
+settings/0/joints/1/rotation_axis = 2
+settings/0/joints/1/limitation = null
+settings/0/joints/2/rotation_axis = 2
+settings/0/joints/2/limitation = null
+settings/0/joints/3/rotation_axis = 0
+settings/0/joints/3/limitation = SubResource("JointLimitationCone3D_weiqw")
+settings/0/joints/3/limitation/right_axis = 0
+settings/0/joints/3/limitation/rotation_offset = Quaternion(0, 0, 0, 1)
+settings/0/joints/4/rotation_axis = 2
+settings/0/joints/4/limitation = null
+settings/0/joints/5/rotation_axis = 0
+settings/0/joints/5/limitation = SubResource("JointLimitationCone3D_h6cnt")
+settings/0/joints/5/limitation/right_axis = 0
+settings/0/joints/5/limitation/rotation_offset = Quaternion(0, 0, 0, 1)
+settings/0/joints/6/rotation_axis = 2
+settings/0/joints/6/limitation = SubResource("JointLimitationCone3D_3st38")
+settings/0/joints/6/limitation/right_axis = 0
+settings/0/joints/6/limitation/rotation_offset = Quaternion(0, 0, 0, 1)
+settings/0/joints/7/rotation_axis = 2
+settings/0/joints/7/limitation = SubResource("JointLimitationCone3D_gnvke")
+settings/0/joints/7/limitation/right_axis = 0
+settings/0/joints/7/limitation/rotation_offset = Quaternion(0, 0, 0, 1)
+settings/0/joints/8/rotation_axis = 3
+settings/0/joints/8/limitation = null
+
+[node name="RobotNetNode" type="Node" parent="." index="1" unique_id=954670587]
+script = ExtResource("3_weiqw")
+metadata/_custom_type_script = "uid://ugekfldx15t0"
