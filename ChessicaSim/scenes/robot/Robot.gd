@@ -12,10 +12,9 @@ signal serverAddressChanged()
 
 ##Default port is [param 5000]. 
 ##This must be changed depending on what port the PLC is using.
-@export var port : int = 5000:
-	set(new):
-		port = new
-		netNode.reconnect()
+@export var _basePort : int = 5000
+
+var _port : int = _basePort
 
 ##This node's position will be set according to [member Robot.chessBoardTf]
 ##to keep it in the correct position relative to the robot.
@@ -24,9 +23,20 @@ signal serverAddressChanged()
 @export var gripping : bool = false
 ##Whether to listen to incoming TCP traffic.
 @export var netMode : bool = true
-##When in shadow mode, the robot will not send feedback and only read incoming
-##messages. This means the simulator will mimic the timings of the real robot.
-@export var shadowMode : bool = true
+
+##When in shadow mode, the simulated robot will connect to port [code]_basePort + 1[/code].
+##Feedback will be sent to the PLC, but ignored by it. This is due to the
+##connection logic at the PLC which expects initial positions and feedback to work.
+@export var shadowMode : bool = true:
+	set(new):
+		shadowMode = new
+		if(shadowMode):
+			_port = _basePort + 1
+		else:
+			_port = _basePort
+		serverAddressChanged.emit()
+		if(netNode != null):
+			netNode.reconnect()
 
 @export var manualControlSpeed : float = 0.5
 
@@ -39,9 +49,11 @@ var _goalPos : Vector3 = Vector3.ZERO
 func _ready() -> void:
 	ik.set_target_node(0, target.get_path())
 	
-	serverAddressChanged.connect(_onServerAddressChanged)
-	_onServerAddressChanged()
+	if(shadowMode):
+		_port = _basePort + 1 #Logic in setter not triggering on first try
 	
+	serverAddressChanged.connect(_onServerAddressChanged)
+	serverAddressChanged.emit()
 	return
 
 func _process(delta : float) -> void:
@@ -55,9 +67,8 @@ func _process(delta : float) -> void:
 			target.global_position.x,
 			target.global_position.z,
 			target.global_position.y)
-		
-		if(!shadowMode):
-			_sendFeedback()
+	
+	_sendFeedback() #_basePort + 1 ignores feedback at PLC
 	return
 
 func _netControl(delta : float) -> void:
@@ -70,7 +81,8 @@ func _netControl(delta : float) -> void:
 		target.global_position = Vector3(temp.x, temp.z, temp.y)
 		gripping = netNode.gripOut
 		$Armature/Skeleton3D/J6/GripperBase.close = gripping
-		
+	else:
+		netNode.reconnect()
 		
 	return
 
@@ -95,7 +107,7 @@ func _targetReached() -> bool:
 
 func _sendFeedback():
 	var backPos : Vector3 = $Armature/Skeleton3D/J6/EndEffector.global_position
-	#Do a little cheating because IK isn't as precise as the real thing.
+	#Do a little cheating because sim IK isn't as precise as the real thing.
 	var delta : Vector3 = abs(backPos - target.global_position)
 	if(delta.length() < 0.05):
 		backPos = target.global_position
@@ -106,6 +118,6 @@ func _sendFeedback():
 
 func _onServerAddressChanged() -> void:
 	netNode.serverAddress = serverAddress
-	netNode.port = port
+	netNode.port = _port
 	netNode.reconnect()
 	return

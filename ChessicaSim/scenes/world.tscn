@@ -54,7 +54,6 @@ transform = Transform3D(0.07071068, -0.07071068, 3.090862e-09, 0, -4.371139e-09,
 serverAddress = "158.38.140.87"
 chessBoard = NodePath("../Board")
 target = NodePath("../RobotTarget")
-shadowMode = true
 
 [node name="Camera3D" type="Camera3D" parent="." unique_id=15326251]
 transform = Transform3D(0.9772755, -0.091817364, 0.19105543, -7.4505815e-09, 0.90131915, 0.43315575, -0.21197312, -0.4233125, 0.8808371, 0.47785783, 0.6567688, 0.7770203)
