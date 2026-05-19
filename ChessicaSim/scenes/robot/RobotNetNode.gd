@@ -19,6 +19,12 @@ func reconnect() -> void:
 	_connectToServer()
 	return
 
+func sendPacket(posNGrip : Vector4) -> void:
+	var msg = str(posNGrip)
+	msg = msg.replace(" ", "")
+	_streamPeer.put_string(msg)
+	return
+
 func _ready() -> void:
 	_pingTimer.wait_time = 1
 	_pingTimer.autostart = true
@@ -45,8 +51,9 @@ func _readPacket() -> void:
 		return
 	
 	var incomingPacket : String = _streamPeer.get_string(availableData) 
+	#print("Received: %s" % incomingPacket)
 	
-	var startIndex = incomingPacket.find("(")
+	var startIndex = incomingPacket.find("(")+1
 	var endIndex = incomingPacket.find(")", startIndex)
 	if(startIndex == -1 || endIndex == -1):
 		return
@@ -69,16 +76,25 @@ func _readPacket() -> void:
 func _ping() -> void:
 	var status : StreamPeerSocket.Status = _streamPeer.get_status()
 	if(status != StreamPeerSocket.Status.STATUS_CONNECTED):
-		print("Attempting reconnection to: %s:%s." % [serverAddress, port])
 		reconnect()
 	return
 
 func _connectToServer() -> void:
+	var stat = _streamPeer.get_status()
+	if(stat != StreamPeerSocket.Status.STATUS_NONE):
+		if(stat == StreamPeerSocket.Status.STATUS_CONNECTING):
+			print("Connecting to: %s:%s" % [serverAddress, port])
+		elif(stat == StreamPeerSocket.Status.STATUS_CONNECTED):
+			print("Connected to server: %s:%s" % [serverAddress, port])
+		elif(stat == StreamPeerSocket.Status.STATUS_ERROR):
+			print("Could not connect. Error occurred.")
+		return
+	
 	var err : Error = _streamPeer.connect_to_host(serverAddress, port)
 	
-	#if(err == OK && _streamPeer.get_status() == StreamPeerSocket.STATUS_CONNECTED):
-	#	print("Connected to server %s:%s" % [_streamPeer.get_connected_host(), _streamPeer.get_connected_port()])
-	#else:
-	#	print("Could not connect.")
+	if(err == OK && _streamPeer.get_status() == StreamPeerSocket.STATUS_CONNECTED):
+		print("Connected to server %s:%s" % [_streamPeer.get_connected_host(), _streamPeer.get_connected_port()])
+	else:
+		print("Could not connect. Error: %s" % error_string(err))
 	
 	return

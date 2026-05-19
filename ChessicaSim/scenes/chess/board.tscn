@@ -1,3 +1,43 @@
 [gd_scene format=3 uid="uid://dv8adxqpsvgjg"]
 
+[ext_resource type="Texture2D" uid="uid://cri70b61owu8a" path="res://assets/board.png" id="1_idrci"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_m5kr7"]
+albedo_texture = ExtResource("1_idrci")
+uv1_scale = Vector3(4, 4, 4)
+uv1_triplanar = true
+
+[sub_resource type="BoxMesh" id="BoxMesh_or6vs"]
+material = SubResource("StandardMaterial3D_m5kr7")
+size = Vector3(0.24, 0.05, 0.24)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_idrci"]
+albedo_color = Color(0.08198662, 0.86, 0.06879999, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_m5kr7"]
+material = SubResource("StandardMaterial3D_idrci")
+size = Vector3(0.01, 0.01, 0.2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_w6gev"]
+albedo_color = Color(0.86, 0.06879999, 0.06879999, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_6y3m1"]
+material = SubResource("StandardMaterial3D_w6gev")
+size = Vector3(0.01, 0.01, 0.2)
+
 [node name="Board" type="Node3D" unique_id=1794015703]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=2039059602]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.12, 0.025, 0.12)
+layers = 3
+mesh = SubResource("BoxMesh_or6vs")
+
+[node name="YAxis" type="MeshInstance3D" parent="." unique_id=655249144]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.1)
+layers = 3
+mesh = SubResource("BoxMesh_m5kr7")
+
+[node name="XAxis" type="MeshInstance3D" parent="." unique_id=1691753917]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -0.1, 0, 0)
+layers = 3
+mesh = SubResource("BoxMesh_6y3m1")
