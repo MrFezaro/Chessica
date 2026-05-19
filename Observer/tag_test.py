@@ -1,9 +1,11 @@
-import tag
 import threading
 import cv2
+from tag import AprilTagChessTracker
 
 print("Initializing tag observer...")
-tag.init()
+tracker = AprilTagChessTracker(camera_index=1)
+tracker.set_camera(0) # Example of camera index switching
+tracker.init()
 
 scan_requested = threading.Event()
 
@@ -17,7 +19,7 @@ threading.Thread(target=input_loop, daemon=True).start()
 while True:
     if scan_requested.is_set():
         scan_requested.clear()
-        tag.update_game_state(show=True)
-        print(tag.game_state)
+        tracker.update_game_state(show=True)
+        print(tracker.game_state)
     else:
         cv2.waitKey(30)  # keeps window responsive while waiting
