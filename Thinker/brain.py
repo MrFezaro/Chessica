@@ -7,7 +7,7 @@ import chess
 import chess.engine
 import chess.pgn
 from pathlib import Path
-from Observer import tag
+from Observer.tag import AprilTagChessTracker
 
 #Convert a camera piece to chess library piece type.
 CAM_PIECE_TO_CHESS_PIECE : dict = {
@@ -27,7 +27,8 @@ MSE_NO_CHANGE : MoveSearchStatus = 1 #No change.
 
 class Brain:
     _engine : chess.engine.SimpleEngine = chess.engine.SimpleEngine.popen_uci(r"C:/_dev/Chessica/Thinker/stockfish-windows-x86-64-avx2/stockfish-windows-x86-64-avx2.exe")
-    
+    _vision : AprilTagChessTracker = None
+
     showVisionWindow : bool = True
     
     board : chess.Board = None
@@ -36,10 +37,14 @@ class Brain:
 
     timePerMove = 0.01 #In seconds
 
-    def __init__(self, searchDepth : int, initialBoard : chess.Board):
-        self._initCameraVision()
+    def __init__(self, searchDepth : int, initialBoard : chess.Board, cameraIndex : int = 0):
+        self._initCameraVision(cameraIndex)
         self._engine.options["Depth"] = searchDepth
         self.board = initialBoard
+        return
+
+    def setCamera(self, cameraIndex : int) -> None:
+        self._vision.set_camera(cameraIndex)
         return
 
     #param ponder: Whether the engine should keep running in the background when awaiting its turn.
@@ -117,7 +122,7 @@ class Brain:
         Uses camera vision to apply opponent's move to internal state.
         Returns a `MoveSearchStatus`.
         """
-        newBoard = self.cameraBoardToChessBoard(tag.update_game_state(show = self.showVisionWindow))
+        newBoard = self.cameraBoardToChessBoard(self._vision.update_game_state(show = self.showVisionWindow))
         status, move = self.searchForMove(self.board, newBoard)
         status : MoveSearchStatus = status #Type hinting
         move : chess.Move = move
@@ -152,9 +157,11 @@ class Brain:
             data = boardDict[key]
             if(data["square"] == None): #Skip pieces outside board
                 continue
-
-            square : chess.Square = chess.parse_square(data["square"])
+            
+            if("unknown" in data["piece"]):
+                continue #Ignore unknowns
             pieceType : chess.PieceType = CAM_PIECE_TO_CHESS_PIECE[data["piece"]]
+            square : chess.Square = chess.parse_square(data["square"])
             piece : chess.Piece = chess.Piece(
                 pieceType,
                 data["color"] == "white"
@@ -233,12 +240,13 @@ class Brain:
         print(game, file=open(f"./Thinker/Games/{filename}.pgn", "x"), end="\n\n")
         return
 
-    def _initCameraVision(self) -> None:
+    def _initCameraVision(self, cameraIndex) -> None:
         print("Initializing tag observer...")
-        tag.init()
+        self._vision : AprilTagChessTracker = AprilTagChessTracker(cameraIndex)
+        self._vision.init()
         
         print("Loading camera calibration file")
-        tag.load_calibration(os.getcwd() + "/Observer/camera_calibration.npz")
+        self._vision.load_calibration(os.getcwd() + "/Observer/camera_calibration.npz")
         return
     
 pass

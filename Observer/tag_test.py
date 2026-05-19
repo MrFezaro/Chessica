@@ -4,7 +4,7 @@ from tag import AprilTagChessTracker
 
 print("Initializing tag observer...")
 tracker = AprilTagChessTracker(camera_index=1)
-tracker.set_camera(0) # Example of camera index switching
+tracker.set_camera(1) # Example of camera index switching
 tracker.init()
 
 scan_requested = threading.Event()

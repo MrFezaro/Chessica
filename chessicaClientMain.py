@@ -18,6 +18,7 @@ useConsoleCommands : bool = True
 
 #How many nodes deep the bot should explore
 BOT_DEPTH : int = 30
+DEFAULT_CAMERA_INDEX : int = 1
 
 initialChessBoard = chess.Board()
 
@@ -70,6 +71,8 @@ reset \t\t| Resets the board to the standard chess setup.
 history [wrap] \t| Alias: hist | Displays the entire move history of the current board. Optionally wraps output to [wrap] (int)
 load [abs_filepath] \t | Loads a board from a .pgn file. Path is absolute.
 think \t | Makes Chessica make a move on her own.
+camera [index] | Alias: cam | Switches the used camera index.
+autoplay | Disables console and makes Chessica play automagically!
 debug [cmd] \t | Accepts a non-chess command that interacts more directly with the robot. Valid commands: {DEBUG_COMMANDS}
             """)
             return
@@ -207,6 +210,17 @@ debug [cmd] \t | Accepts a non-chess command that interacts more directly with t
             print(f"Turning off console. Goodluck!")
             return
         
+        if(cmd[0] == "cam" or cmd[0] == "camera"):
+            if(len(cmd) == 2 and cmd[1] != ""):
+                if(cmd[1].isdigit() and int(cmd[1]) >= 0):
+                    chessimind.setCamera(cmd[1])
+                else:
+                    print(f"Invalid index")
+            else:
+                print("Invalid number of parameters")
+
+            return
+        
         print("Not a recognized command. Did you mistype? Type 'help' or 'h' for help.")
     #
     #--- no more func ---
@@ -230,7 +244,7 @@ debug [cmd] \t | Accepts a non-chess command that interacts more directly with t
         nodeMoveInput = client.get_node(nodeMoveInputId)
         nodeMoveExecute = client.get_node(nodeMoveExecuteId)
 
-        chessimind = brain.Brain(BOT_DEPTH, initialChessBoard)
+        chessimind = brain.Brain(BOT_DEPTH, initialChessBoard, cameraIndex=DEFAULT_CAMERA_INDEX)
         chessimind.showVisionWindow = True
 
         coldboot : bool = True
@@ -242,7 +256,7 @@ debug [cmd] \t | Accepts a non-chess command that interacts more directly with t
                 #Only on rising edge
                 if(not coldboot and await nodeReady.read_value()):
                     #Temporary disabling of vision to test simulator
-                    err = brain.MSE_OK #chessimind.openYourEyeAndSee()
+                    err = chessimind.openYourEyeAndSee()
                     if(err == brain.MSE_NO_CHANGE):
                         continue
 
