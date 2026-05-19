@@ -63,10 +63,7 @@ func _process(delta : float) -> void:
 		_manualControl(delta)
 	
 	if(_targetReached):
-		_currentPos = Vector3(
-			target.global_position.x,
-			target.global_position.z,
-			target.global_position.y)
+		_currentPos = target.global_position
 	
 	_sendFeedback() #_basePort + 1 ignores feedback at PLC
 	return
@@ -75,10 +72,12 @@ func _netControl(delta : float) -> void:
 	if(netNode.getConnectionStatus() == StreamPeerSocket.STATUS_CONNECTED):
 		
 		var incoming = netNode.positionOut / 1000 #from mm
-		_goalPos = incoming
-		var temp = _currentPos.move_toward(_goalPos, delta*moveSpeed)
+		_goalPos = Vector3(incoming.y, incoming.z, incoming.x)
+		$GoalPosMesh.global_position = Vector3(incoming.y, incoming.z, incoming.x)
 		
-		target.global_position = Vector3(temp.x, temp.z, temp.y)
+		var temp = _currentPos.move_toward(_goalPos, delta*moveSpeed)
+		target.global_position = temp
+		
 		gripping = netNode.gripOut
 		$Armature/Skeleton3D/J6/GripperBase.close = gripping
 	else:
@@ -113,7 +112,7 @@ func _sendFeedback():
 		backPos = target.global_position
 	
 	backPos *= 1000 #To millimeters
-	netNode.sendPacket(Vector4(backPos.x, backPos.z, backPos.y, gripping))
+	netNode.sendPacket(Vector4(backPos.y, backPos.z, backPos.x, gripping))
 	return
 
 func _onServerAddressChanged() -> void:

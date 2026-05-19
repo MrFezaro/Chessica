@@ -153,7 +153,7 @@ def _ensure_init() -> None:
     if _cap is None:
         import platform
         backend = cv2.CAP_DSHOW if platform.system() == "Windows" else cv2.CAP_V4L2
-        _cap = cv2.VideoCapture(0, backend)  # Change camera index if you have multiple webcams
+        _cap = cv2.VideoCapture(1, backend)  # Change camera index if you have multiple webcams
         if not _cap.isOpened():
             raise RuntimeError("tag: cannot open USB webcam.")
         _cap.set(cv2.CAP_PROP_FRAME_WIDTH,  1920)

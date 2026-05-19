@@ -25,9 +25,19 @@ angle = 0.0
 
 [sub_resource type="JointLimitationCone3D" id="JointLimitationCone3D_gnvke"]
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_h6cnt"]
+transparency = 1
+albedo_color = Color(0.3673139, 0.49772704, 0.969843, 0.8627451)
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_3st38"]
+material = SubResource("StandardMaterial3D_h6cnt")
+radius = 0.1
+height = 1.0
+
 [node name="UR5e2" unique_id=940393880 instance=ExtResource("1_eh0qr")]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0)
 script = ExtResource("2_ay6cs")
+moveSpeed = 0.2
 
 [node name="Armature" parent="." index="0" unique_id=1978604372]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 0, 0)
@@ -142,3 +152,8 @@ settings/0/joints/8/limitation = null
 [node name="RobotNetNode" type="Node" parent="." index="1" unique_id=954670587]
 script = ExtResource("3_weiqw")
 metadata/_custom_type_script = "uid://ugekfldx15t0"
+
+[node name="GoalPosMesh" type="MeshInstance3D" parent="." index="2" unique_id=348894594]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 0, 0)
+layers = 3
+mesh = SubResource("CapsuleMesh_3st38")

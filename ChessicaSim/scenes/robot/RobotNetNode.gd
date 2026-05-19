@@ -51,7 +51,7 @@ func _readPacket() -> void:
 		return
 	
 	var incomingPacket : String = _streamPeer.get_string(availableData) 
-	print("Received: %s" % incomingPacket)
+	#print("Received: %s" % incomingPacket)
 	
 	var startIndex = incomingPacket.find("(")+1
 	var endIndex = incomingPacket.find(")", startIndex)

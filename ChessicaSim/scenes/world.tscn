@@ -22,8 +22,8 @@ albedo_color = Color(1, 0, 0, 0.6745098)
 
 [sub_resource type="SphereMesh" id="SphereMesh_4wyf3"]
 material = SubResource("StandardMaterial3D_rwgxs")
-radius = 0.05
-height = 0.1
+radius = 0.01
+height = 0.2
 
 [sub_resource type="BoxMesh" id="BoxMesh_nnsk1"]
 size = Vector3(0.1, 0.1, 1)
@@ -40,28 +40,26 @@ albedo_color = Color(0.97, 0, 0.33949992, 0.5882353)
 transparency = 1
 albedo_color = Color(0, 0.64, 0.106666565, 0.5882353)
 
+[sub_resource type="CameraAttributesPractical" id="CameraAttributesPractical_rwgxs"]
+exposure_multiplier = 2.0
+
 [node name="Node3D" type="Node3D" unique_id=587747786]
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1306406098]
 environment = SubResource("Environment_k0juu")
 
+[node name="Camera3D" type="Camera3D" parent="." unique_id=15326251]
+transform = Transform3D(0.91710174, -0.17267886, 0.35931373, -4.5854996e-08, 0.90131915, 0.4331557, -0.3986532, -0.3972479, 0.82660145, 0.32751754, 0.6004987, 0.53432655)
+
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1951082524]
 transform = Transform3D(-0.8660254, -0.43301278, 0.25, 0, 0.49999997, 0.86602545, -0.50000006, 0.75, -0.43301266, 0, 0, 0)
 shadow_enabled = true
-
-[node name="UR5e" parent="." unique_id=22357141 node_paths=PackedStringArray("chessBoard", "target") instance=ExtResource("1_nnsk1")]
-transform = Transform3D(0.07071068, -0.07071068, 3.090862e-09, 0, -4.371139e-09, -0.1, 0.07071068, 0.07071068, -3.090862e-09, 0.19, 0.1, -0.353)
-serverAddress = "158.38.140.87"
-chessBoard = NodePath("../Board")
-target = NodePath("../RobotTarget")
-
-[node name="Camera3D" type="Camera3D" parent="." unique_id=15326251]
-transform = Transform3D(0.9772755, -0.091817364, 0.19105543, -7.4505815e-09, 0.90131915, 0.43315575, -0.21197312, -0.4233125, 0.8808371, 0.47785783, 0.6567688, 0.7770203)
 
 [node name="RobotTarget" type="Marker3D" parent="." unique_id=1164006389]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.125, 0.25, 0.125)
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="RobotTarget" unique_id=873832880]
+layers = 3
 mesh = SubResource("SphereMesh_4wyf3")
 
 [node name="ElbowTarget" type="Marker3D" parent="RobotTarget" unique_id=1894583939]
@@ -87,4 +85,38 @@ mesh = SubResource("BoxMesh_nnsk1")
 surface_material_override/0 = SubResource("StandardMaterial3D_71j4m")
 
 [node name="Board" parent="." unique_id=1794015703 instance=ExtResource("2_rwgxs")]
-transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0, 0, 0)
+transform = Transform3D(-2.1855692e-07, 0, 1, 0, 1, 0, -1, 0, -2.1855692e-07, 0, 0, 0)
+
+[node name="UR5e" parent="Board" unique_id=22357141 node_paths=PackedStringArray("chessBoard", "target") instance=ExtResource("1_nnsk1")]
+transform = Transform3D(-0.070710674, -0.070710674, 3.0908616e-09, 0, -4.3711386e-09, -0.099999994, 0.070710674, -0.070710674, 3.090862e-09, 0.29, 0.1, 0.2)
+serverAddress = "158.38.140.87"
+chessBoard = NodePath("..")
+target = NodePath("../../RobotTarget")
+
+[node name="ViewPorts" type="CanvasLayer" parent="." unique_id=223926728]
+
+[node name="SubViewportContainer" type="SubViewportContainer" parent="ViewPorts" unique_id=1704896528]
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -256.0
+offset_top = -256.0
+grow_horizontal = 0
+grow_vertical = 0
+size_flags_horizontal = 4
+size_flags_vertical = 4
+stretch = true
+
+[node name="SubViewport" type="SubViewport" parent="ViewPorts/SubViewportContainer" unique_id=760930195]
+handle_input_locally = false
+size = Vector2i(256, 256)
+render_target_update_mode = 4
+
+[node name="Camera3D" type="Camera3D" parent="ViewPorts/SubViewportContainer/SubViewport" unique_id=1396749580]
+transform = Transform3D(-4.3711385e-08, -1, 0, -4.371139e-08, 1.9106853e-15, 1, -1, 4.3711385e-08, -4.371139e-08, 0.12, 0.4, 0.12)
+cull_mask = 1048574
+attributes = SubResource("CameraAttributesPractical_rwgxs")
+projection = 1
+size = 0.5
