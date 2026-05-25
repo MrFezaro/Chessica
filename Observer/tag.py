@@ -76,7 +76,7 @@ class AprilTagChessTracker:
         )
         print(f"Calibration loaded from '{path}'  ({int(w)}x{int(h)})")
 
-    def update_game_state(self, show: bool = False) -> dict:
+    def update_game_state(self, show: bool = False, print_to_console : bool = True) -> dict:
         """
         Grab one frame from the camera, detect AprilTags, and update game_state.
         Returns the updated game_state dict.
@@ -105,9 +105,10 @@ class AprilTagChessTracker:
             color   = COLOR_MAP.get(tid, 'unknown')
             square  = self._image_to_square((cx, cy))
 
-            print(f"  Tag {tid:2d}  {color:5s} {piece:7s}  "
-                  f"({cx:4d},{cy:4d})  margin={tag.decision_margin:.1f}  "
-                  f"square={square or 'off-board'}")
+            if(print_to_console):
+                print(f"  Tag {tid:2d}  {color:5s} {piece:7s}  "
+                    f"({cx:4d},{cy:4d})  margin={tag.decision_margin:.1f}  "
+                    f"square={square or 'off-board'}")
 
             new_state[square or f"tag_{tid}"] = {
                 "piece":  piece,

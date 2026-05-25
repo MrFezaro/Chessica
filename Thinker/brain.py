@@ -122,8 +122,7 @@ class Brain:
         Uses camera vision to apply opponent's move to internal state.
         Returns a `MoveSearchStatus`.
         """
-        newBoard = self.cameraBoardToChessBoard(self._vision.update_game_state(show = self.showVisionWindow))
-        print(f"new board:\n{newBoard}\ncurrent board:\n{self.board}")
+        newBoard = self.cameraBoardToChessBoard(self._vision.update_game_state(show = self.showVisionWindow, print_to_console= False))
         status, move = self.searchForMove(self.board, newBoard)
         status : MoveSearchStatus = status #Type hinting
         move : chess.Move = move
@@ -184,7 +183,10 @@ class Brain:
         status : MoveSearchStatus = MSE_ERROR
         move = chess.Move.null()
 
-        if(oldBoard.fen() == newBoard.fen()):
+        #Ignore board metadata when comparing FEN, invalid for the detected board anyway
+        #Space is not part of FEN positions!
+        newBoardFen = newBoard.fen().split(" ")[0]
+        if(oldBoard.fen().split(" ")[0] == newBoardFen):
             status = MSE_NO_CHANGE
             return (status, move)
 
@@ -197,13 +199,15 @@ class Brain:
                 continue #Not implemented due to time constraints
 
             workBoard.push(m)
-            print(f"Trying {m}")
-            if(workBoard.fen() == newBoard.fen()):
+            workBoardFen = workBoard.fen().split(" ")[0]
+            #print(f"Trying {m}")
+            #print(f"newBoard FEN: \n{newBoardFen}\n workBoard FEN: \n{workBoardFen}")
+            
+            if(workBoardFen == newBoardFen):
                 status = MSE_OK
                 move = m
                 break
             else:
-                print(f"Before pop:\n{workBoard}")
                 workBoard.pop() #Remove previous move before next iteration
         
         return (status, move)

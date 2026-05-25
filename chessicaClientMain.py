@@ -269,11 +269,12 @@ debug [cmd] \t | Accepts a non-chess command that interacts more directly with t
                     
                     if(err == brain.MSE_NO_CHANGE):
                         #Repeat loop
+                        print("No change detected. Retrying.")
                         time.sleep(CV_ERROR_WAIT_TIME)
                         continue
 
                     if(err != brain.MSE_OK):
-                        print("Illegal move performed?")
+                        print("Cannot deduce move. Illegal move performed?")
                         #Send alarm to PLC
                         time.sleep(CV_ERROR_WAIT_TIME)
                         continue
