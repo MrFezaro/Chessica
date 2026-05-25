@@ -37,6 +37,7 @@ height = 1.0
 [node name="UR5e2" unique_id=940393880 instance=ExtResource("1_eh0qr")]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0)
 script = ExtResource("2_ay6cs")
+moveSpeed = 0.2
 
 [node name="Armature" parent="." index="0" unique_id=1978604372]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 0, 0)
