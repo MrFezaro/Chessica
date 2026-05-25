@@ -123,14 +123,13 @@ class Brain:
         Returns a `MoveSearchStatus`.
         """
         newBoard = self.cameraBoardToChessBoard(self._vision.update_game_state(show = self.showVisionWindow))
+        print(f"new board:\n{newBoard}\ncurrent board:\n{self.board}")
         status, move = self.searchForMove(self.board, newBoard)
         status : MoveSearchStatus = status #Type hinting
         move : chess.Move = move
         if(status == MSE_OK):
             print(f"Saw move: {move.uci()}")
             self.board.push(move)
-        else:
-            print(f"Could not find move! Cheating?")
 
         return status
 
@@ -152,7 +151,6 @@ class Brain:
         """
 
         squarePieceDict = {}
-        print(f"{boardDict = }")
         for key in boardDict:
             data = boardDict[key]
             if(data["square"] == None): #Skip pieces outside board
@@ -162,7 +160,9 @@ class Brain:
                 continue #Ignore unknowns
 
             pieceType : chess.PieceType = CAM_PIECE_TO_CHESS_PIECE[data["piece"]]
+            print(f"Square: {data["square"]}")
             square : chess.Square = chess.parse_square(data["square"])
+            print(f"Square indexed: {square}")
             piece : chess.Piece = chess.Piece(
                 pieceType,
                 data["color"] == "white"
@@ -199,6 +199,7 @@ class Brain:
                 continue #Not implemented due to time constraints
 
             workBoard.push(m)
+            #print(f"Trying {m}")
             if(workBoard.fen() == newBoard.fen()):
                 status = MSE_OK
                 move = m

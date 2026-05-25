@@ -13,6 +13,7 @@ DEBUG_COMMANDS : list = ["it_queens", "it_capture", "reset"]
 DEBUG_DISABLE_VISION : bool = False
 
 CONSOLE_PREFIX : str = "chessica >"
+CV_ERROR_WAIT_TIME : float = 1.0 #How long to wait after a camera vision error before trying again
 
 #Whether console commands should be enabled.
 useConsoleCommands : bool = True
@@ -263,10 +264,13 @@ debug [cmd] \t | Accepts a non-chess command that interacts more directly with t
                     
                     if(err == brain.MSE_NO_CHANGE):
                         #Repeat loop
+                        time.sleep(CV_ERROR_WAIT_TIME)
                         continue
 
                     if(err != brain.MSE_OK):
+                        print("Illegal move performed?")
                         #Send alarm to PLC
+                        time.sleep(CV_ERROR_WAIT_TIME)
                         continue
                     
                     #Execute own move
