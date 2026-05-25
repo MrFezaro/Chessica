@@ -160,9 +160,7 @@ class Brain:
                 continue #Ignore unknowns
 
             pieceType : chess.PieceType = CAM_PIECE_TO_CHESS_PIECE[data["piece"]]
-            print(f"Square: {data["square"]}")
             square : chess.Square = chess.parse_square(data["square"])
-            print(f"Square indexed: {square}")
             piece : chess.Piece = chess.Piece(
                 pieceType,
                 data["color"] == "white"
@@ -199,12 +197,13 @@ class Brain:
                 continue #Not implemented due to time constraints
 
             workBoard.push(m)
-            #print(f"Trying {m}")
+            print(f"Trying {m}")
             if(workBoard.fen() == newBoard.fen()):
                 status = MSE_OK
                 move = m
                 break
             else:
+                print(f"Before pop:\n{workBoard}")
                 workBoard.pop() #Remove previous move before next iteration
         
         return (status, move)

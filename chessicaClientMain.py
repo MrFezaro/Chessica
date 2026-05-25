@@ -9,7 +9,7 @@ from asyncua import Client
 from Thinker import brain, supersecret
 
 DEBUG_COMMAND_PREFIX : str = "CMD_"
-DEBUG_COMMANDS : list = ["it_queens", "it_capture", "reset"]
+DEBUG_COMMANDS : list = ["it_queens", "it_capture", "reset", "init"]
 DEBUG_DISABLE_VISION : bool = False
 
 CONSOLE_PREFIX : str = "chessica >"
@@ -45,8 +45,9 @@ async def main():
     #--- inner func zone! ---
     #
 
-    async def sendMove(move : str) -> None:
-        print(f"Made move: {move}")
+    async def sendMove(move : str, printMsg : bool = True) -> None:
+        if(printMsg):
+            print(f"Made move: {move}")
         await nodeMoveInput.write_value(move)
         return
 
@@ -248,6 +249,10 @@ debug [cmd] \t | Accepts a non-chess command that interacts more directly with t
 
         chessimind = brain.Brain(BOT_DEPTH, initialChessBoard, cameraIndex=DEFAULT_CAMERA_INDEX)
         chessimind.showVisionWindow = True
+
+        #Initialize PLC to ensure internal values are reset.
+        await sendMove(f"{DEBUG_COMMAND_PREFIX}{DEBUG_COMMANDS[3]}")
+        await sendExecute()
 
         coldboot : bool = True
         wannaExit : bool = False
