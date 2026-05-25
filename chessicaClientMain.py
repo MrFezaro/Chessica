@@ -10,6 +10,7 @@ from Thinker import brain, supersecret
 
 DEBUG_COMMAND_PREFIX : str = "CMD_"
 DEBUG_COMMANDS : list = ["it_queens", "it_capture", "reset"]
+DEBUG_DISABLE_VISION : bool = False
 
 CONSOLE_PREFIX : str = "chessica >"
 
@@ -255,17 +256,20 @@ debug [cmd] \t | Accepts a non-chess command that interacts more directly with t
                 #Awaits PLC to give a ready signal before deducing opponent's move and executing own move
                 #Only on rising edge
                 if(not coldboot and await nodeReady.read_value()):
-                    #Temporary disabling of vision to test simulator
-                    err = chessimind.openYourEyeAndSee()
+                    #Deduce opponent move
+                    err = brain.MSE_OK
+                    if(not DEBUG_DISABLE_VISION):
+                        err = chessimind.openYourEyeAndSee()    
+                    
                     if(err == brain.MSE_NO_CHANGE):
+                        #Repeat loop
                         continue
 
                     if(err != brain.MSE_OK):
-                        print("Could not SEE valid move! Cheating?")
                         #Send alarm to PLC
                         continue
-
-                    #print(f"Saw {chessimind.board.peek().uci()}")
+                    
+                    #Execute own move
                     move = chessimind.makeMove()
                     await sendMove(move)
                     await sendExecute()
@@ -290,7 +294,10 @@ debug [cmd] \t | Accepts a non-chess command that interacts more directly with t
         pass
 
     finally:
-        await client.disconnect()
+        try:
+            await client.check_connection()
+        except Exception:
+            await client.disconnect()
         
     return
 

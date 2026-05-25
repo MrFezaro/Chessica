@@ -160,6 +160,7 @@ class Brain:
             
             if("unknown" in data["piece"]):
                 continue #Ignore unknowns
+
             pieceType : chess.PieceType = CAM_PIECE_TO_CHESS_PIECE[data["piece"]]
             square : chess.Square = chess.parse_square(data["square"])
             piece : chess.Piece = chess.Piece(
@@ -193,15 +194,17 @@ class Brain:
 
         for m in workBoard.legal_moves:
             if(workBoard.piece_at(m.from_square) == None):
-                #Raise alarm, order PLC to move robot
-                #Then, take a picture from a different angle
-                continue #TEMPORARY skip this. This CAN give faulty results!
+                #Raise alarm, order PLC to move robot above board,
+                #then take a picture from a different angle
+                continue #Not implemented due to time constraints
 
             workBoard.push(m)
             if(workBoard.fen() == newBoard.fen()):
                 status = MSE_OK
                 move = m
                 break
+            else:
+                workBoard.pop() #Remove previous move before next iteration
         
         return (status, move)
 
