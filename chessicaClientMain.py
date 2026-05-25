@@ -13,7 +13,7 @@ DEBUG_COMMANDS : list = ["it_queens", "it_capture", "reset", "init"]
 DEBUG_DISABLE_VISION : bool = False
 
 CONSOLE_PREFIX : str = "chessica >"
-CV_ERROR_WAIT_TIME : float = 1.0 #How long to wait after a camera vision error before trying again
+CV_ERROR_WAIT_TIME : float = 0.1 #How long to wait after a camera vision error before trying again
 
 #Whether console commands should be enabled.
 useConsoleCommands : bool = True
@@ -32,6 +32,9 @@ password = "NTNUIndSysavnj9"
 nodeReadyId = "ns=5;b=AQAAAKbhKnGK9zM6uvotdobvYEeM925mjOIkbek=" #OUTPUT, if PLC is ready
 nodeMoveInputId = "ns=5;b=AQAAAKbhKnGK9zM6uvotdobvYEeM9255hvUlXYfzNWDp" #INPUT, move for PLC to execute
 nodeMoveExecuteId = "ns=5;b=AQAAAKbhKnGK9zM6uvotdobvYEeM925xkeYjYZ3mDXuf5kA=" #INPUT Rising Edge, execute move
+nodeWarnDeductionId = "ns=5;b=AQAAAKbhKnGK9zM6uvotdobvYEeM925wjOc1d53qL3qs8TJ7m4M="
+nodeWarnNoChangeId = "ns=5;b=AQAAAKbhKnGK9zM6uvotdobvYEeM9252huIycLztI3yI7SdxjYM="
+nodeCheckmateId = "ns=5;b=AQAAAKbhKnGK9zM6uvotdobvYEeM9253geYjf4TiNHHp"
 
 #--- ---
 
@@ -56,6 +59,50 @@ async def main():
         time.sleep(1)
         await nodeMoveExecute.write_value(False)
         return
+
+    async def gameLoop(coldboot : bool) -> None:
+        while not chessimind.board.is_game_over():
+            #Awaits PLC to give a ready signal before deducing opponent's move and executing own move
+            #Only on rising edge
+            if(not coldboot and await nodeReady.read_value()):
+                #Deduce opponent move
+                err = brain.MSE_OK
+                if(not DEBUG_DISABLE_VISION):
+                    err = chessimind.openYourEyeAndSee()    
+                
+                if(err == brain.MSE_NO_CHANGE):
+                    #Repeat loop
+                    print("No change detected. Retrying.")
+                    await nodeWarnNoChange.write_value(True)
+                    await nodeWarnDeduction.write_value(False)
+                    time.sleep(CV_ERROR_WAIT_TIME)
+                    continue
+
+                if(err != brain.MSE_OK):
+                    print("Cannot deduce move. Illegal move performed?")
+                    #Send alarm to PLC
+                    await nodeWarnDeduction.write_value(True)
+                    await nodeWarnNoChange.write_value(False)
+                    time.sleep(CV_ERROR_WAIT_TIME)
+                    continue
+                
+                #Everything OK!
+                await nodeWarnNoChange.write_value(False)
+                await nodeWarnDeduction.write_value(False)
+
+                #Execute own move
+                move = chessimind.makeMove()
+                await sendMove(move)
+                await sendExecute()
+                continue
+            
+            elif(useConsoleCommands):
+                await inputCommand(await async_input(CONSOLE_PREFIX))
+            pass
+
+            coldboot = False
+            pass #while end
+    pass
 
     #Commands:
     #move [uci move]
@@ -121,7 +168,6 @@ debug [cmd] \t | Accepts a non-chess command that interacts more directly with t
     
         if(cmd[0] == "reset"):
             print("RESETTING BOARD")
-            chessimind.board = chess.Board()
             chessimind.board = chess.Board()
             return
         
@@ -246,6 +292,13 @@ debug [cmd] \t | Accepts a non-chess command that interacts more directly with t
         nodeReady = client.get_node(nodeReadyId)
         nodeMoveInput = client.get_node(nodeMoveInputId)
         nodeMoveExecute = client.get_node(nodeMoveExecuteId)
+        nodeWarnDeduction = client.get_node(nodeWarnDeductionId)
+        nodeWarnNoChange = client.get_node(nodeWarnNoChangeId)
+        nodeCheckmate = client.get_node(nodeCheckmateId)
+
+        await nodeWarnDeduction.write_value(False)
+        await nodeWarnNoChange.write_value(False)
+        await nodeCheckmate.write_value(False)
 
         chessimind = brain.Brain(BOT_DEPTH, initialChessBoard, cameraIndex=DEFAULT_CAMERA_INDEX)
         chessimind.showVisionWindow = True
@@ -257,51 +310,27 @@ debug [cmd] \t | Accepts a non-chess command that interacts more directly with t
         coldboot : bool = True
         wannaExit : bool = False
         while not wannaExit:
-            while not chessimind.gameComplete():
+            await nodeCheckmate.write_value(False)
+            await gameLoop(coldboot)
+            await nodeCheckmate.write_value(True)
 
-                #Awaits PLC to give a ready signal before deducing opponent's move and executing own move
-                #Only on rising edge
-                if(not coldboot and await nodeReady.read_value()):
-                    #Deduce opponent move
-                    err = brain.MSE_OK
-                    if(not DEBUG_DISABLE_VISION):
-                        err = chessimind.openYourEyeAndSee()    
-                    
-                    if(err == brain.MSE_NO_CHANGE):
-                        #Repeat loop
-                        print("No change detected. Retrying.")
-                        time.sleep(CV_ERROR_WAIT_TIME)
-                        continue
-
-                    if(err != brain.MSE_OK):
-                        print("Cannot deduce move. Illegal move performed?")
-                        #Send alarm to PLC
-                        time.sleep(CV_ERROR_WAIT_TIME)
-                        continue
-                    
-                    #Execute own move
-                    move = chessimind.makeMove()
-                    await sendMove(move)
-                    await sendExecute()
-                    continue
-                
-                elif(useConsoleCommands):
-                    await inputCommand(await async_input(CONSOLE_PREFIX))
-                    pass
-
-                coldboot = False
-                pass
-            
             chessimind.printBoard(
                 f"Game {datetime.datetime.today().strftime("%Y-%m-%d, %H-%M-%S")}",
                 "Ebic Chessica Gameplay",
                 datetime.datetime.today().strftime("%Y-%m-%d, %H:%M:%S"),
                 )
 
-        exitInput = await async_input("chessica > Exit program? [y/n] - ")
-        exitInput = exitInput.lower()
-        wannaExit = exitInput == "y" or exitInput == "yes"
-        pass
+            exitInput = await async_input("chessica > Exit program? [y/n] - ")
+            exitInput = exitInput.lower()
+            wannaExit = exitInput == "y" or exitInput == "yes"
+            if(not wannaExit):
+                chessimind.board = chess.Board()
+                await sendMove(f"{DEBUG_COMMAND_PREFIX}{DEBUG_COMMANDS[3]}")
+                await sendExecute()
+
+        pass #while end
+        
+        chessimind.gameComplete()
 
     finally:
         try:

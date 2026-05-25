@@ -244,7 +244,12 @@ class Brain:
         game.headers["Date"] = dateTime
 
         Path("./Thinker/Games/").mkdir(parents=True, exist_ok=True)
-        print(game, file=open(f"./Thinker/Games/{filename}.pgn", "x"), end="\n\n")
+        fullPath = f"./Thinker/Games/{filename}.pgn"
+        file = Path(fullPath)
+        if(not file.exists()):
+            print(game, file=open(fullPath, "x"), end="\n\n")
+        else:
+            print(f"File '{fullPath}' already exists. Ignoring.")
         return
 
     def _initCameraVision(self, cameraIndex) -> None:
