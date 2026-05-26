@@ -60,6 +60,14 @@ async def main():
         await nodeMoveExecute.write_value(False)
         return
 
+    #Resets the PLC's state. Used for starting a new game or connecting after the client dies.
+    #The client keeps track of the history, so it dying means a restart is required.
+    async def resetPlcState() -> None:
+        await sendMove(f"{DEBUG_COMMAND_PREFIX}{DEBUG_COMMANDS[3]}")
+        await nodeReady.write_value(True) #Force ready at PLC to make it read this command
+        await sendExecute()
+        return
+
     async def gameLoop(coldboot : bool) -> None:
         while not chessimind.board.is_game_over():
             #Awaits PLC to give a ready signal before deducing opponent's move and executing own move
@@ -303,9 +311,7 @@ debug [cmd] \t | Accepts a non-chess command that interacts more directly with t
         chessimind = brain.Brain(BOT_DEPTH, initialChessBoard, cameraIndex=DEFAULT_CAMERA_INDEX)
         chessimind.showVisionWindow = True
 
-        #Initialize PLC to ensure internal values are reset.
-        await sendMove(f"{DEBUG_COMMAND_PREFIX}{DEBUG_COMMANDS[3]}")
-        await sendExecute()
+        await resetPlcState()
 
         coldboot : bool = True
         wannaExit : bool = False
@@ -325,9 +331,8 @@ debug [cmd] \t | Accepts a non-chess command that interacts more directly with t
             wannaExit = exitInput == "y" or exitInput == "yes"
             if(not wannaExit):
                 chessimind.board = chess.Board()
-                await sendMove(f"{DEBUG_COMMAND_PREFIX}{DEBUG_COMMANDS[3]}")
-                await sendExecute()
-
+                await resetPlcState()
+        
         pass #while end
         
         chessimind.gameComplete()
