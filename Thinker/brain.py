@@ -185,8 +185,7 @@ class Brain:
 
         #Ignore board metadata when comparing FEN, invalid for the detected board anyway
         #Space is not part of FEN positions!
-        newBoardFen = newBoard.fen().split(" ")[0]
-        if(oldBoard.fen().split(" ")[0] == newBoardFen):
+        if(oldBoard.board_fen() == newBoard.board_fen()):
             status = MSE_NO_CHANGE
             return (status, move)
 
@@ -194,16 +193,13 @@ class Brain:
 
         for m in workBoard.legal_moves:
             if(workBoard.piece_at(m.from_square) == None):
-                #Raise alarm, order PLC to move robot above board,
-                #then take a picture from a different angle
-                continue #Not implemented due to time constraints
+                continue
 
             workBoard.push(m)
-            workBoardFen = workBoard.fen().split(" ")[0]
             #print(f"Trying {m}")
-            #print(f"newBoard FEN: \n{newBoardFen}\n workBoard FEN: \n{workBoardFen}")
+            #print(f"newBoard FEN: \n{newBoard.board_fen()}\n workBoard FEN: \n{workBoard.board_fen()}")
             
-            if(workBoardFen == newBoardFen):
+            if(workBoard.board_fen() == newBoard.board_fen()):
                 status = MSE_OK
                 move = m
                 break
