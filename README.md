@@ -6,7 +6,7 @@
 
 ## Project Poster
 
-
+![Project Poster](poster.png)
 
 ---
 
