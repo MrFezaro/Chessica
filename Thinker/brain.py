@@ -26,7 +26,7 @@ MSE_ERROR : MoveSearchStatus = -1 #Illegal move
 MSE_NO_CHANGE : MoveSearchStatus = 1 #No change.
 
 class Brain:
-    _engine : chess.engine.SimpleEngine = chess.engine.SimpleEngine.popen_uci(r"C:/_dev/Chessica/Thinker/stockfish-windows-x86-64-avx2/stockfish-windows-x86-64-avx2.exe")
+    _engine : chess.engine.SimpleEngine
     _vision : AprilTagChessTracker = None
 
     showVisionWindow : bool = True
@@ -37,10 +37,11 @@ class Brain:
 
     timePerMove = 0.01 #In seconds
 
-    def __init__(self, searchDepth : int, initialBoard : chess.Board, cameraIndex : int = 0):
+    def __init__(self, searchDepth : int, initialBoard : chess.Board, enginePath : str = "", cameraIndex : int = 0):
         self._initCameraVision(cameraIndex)
         self._engine.options["Depth"] = searchDepth
         self.board = initialBoard
+        _engine = chess.engine.SimpleEngine.popen_uci(enginePath)
         return
 
     def setCamera(self, cameraIndex : int) -> None:

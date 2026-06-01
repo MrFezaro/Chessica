@@ -1,6 +1,7 @@
 #USE PYTHON 3.13.11
 #Client with virtual PLC as server
 
+from pathlib import Path
 import time
 import datetime
 import asyncio
@@ -20,7 +21,11 @@ useConsoleCommands : bool = True
 
 #How many nodes deep the bot should explore
 BOT_DEPTH : int = 30
+#Default camera index to use for vision
 DEFAULT_CAMERA_INDEX : int = 1
+#Chess engine path, made to be relative to where the file is executed at.
+CHESS_ENGINE_PATH : str = \
+str(Path(__file__).resolve().parent).replace("\\", "/") + r"/Thinker/stockfish-windows-x86-64-avx2/stockfish-windows-x86-64-avx2.exe"
 
 initialChessBoard = chess.Board()
 
@@ -44,6 +49,7 @@ async def async_input(prompt: str) -> str:
     return await asyncio.to_thread(input, prompt)
 
 async def main():
+    print(CHESS_ENGINE_PATH)
     #
     #--- inner func zone! ---
     #
@@ -308,7 +314,7 @@ debug [cmd] \t | Accepts a non-chess command that interacts more directly with t
         await nodeWarnNoChange.write_value(False)
         await nodeCheckmate.write_value(False)
 
-        chessimind = brain.Brain(BOT_DEPTH, initialChessBoard, cameraIndex=DEFAULT_CAMERA_INDEX)
+        chessimind = brain.Brain(BOT_DEPTH, initialChessBoard, enginePath=CHESS_ENGINE_PATH, cameraIndex=DEFAULT_CAMERA_INDEX)
         chessimind.showVisionWindow = True
 
         await resetPlcState()
