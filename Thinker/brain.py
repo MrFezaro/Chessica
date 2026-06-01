@@ -38,10 +38,10 @@ class Brain:
     timePerMove = 0.01 #In seconds
 
     def __init__(self, searchDepth : int, initialBoard : chess.Board, enginePath : str = "", cameraIndex : int = 0):
+        self._engine = chess.engine.SimpleEngine.popen_uci(enginePath)
         self._initCameraVision(cameraIndex)
         self._engine.options["Depth"] = searchDepth
         self.board = initialBoard
-        _engine = chess.engine.SimpleEngine.popen_uci(enginePath)
         return
 
     def setCamera(self, cameraIndex : int) -> None:
