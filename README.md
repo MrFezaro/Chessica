@@ -19,14 +19,14 @@ physically executing moves on the board.
 ---
 
 ## Project Poster
-
-![Project Poster](poster.png)
+<img src="poster.png" width="1000"/>
 
 ---
 
 ## System Diagram
+<img src="diagram.png" width="1000"/>
 
-![System Diagram](diagram.png)
+---
 
 ## Final Setup
-![Final Setup](final_setup.png)
+<img src="final_setup.jpg" width="1000"/>
