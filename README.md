@@ -1,5 +1,7 @@
 # Chessica
 
+> *"I can't lie to you about your chances, but... you have my sympathies."*
+
 ## Project Structure
 
 `chessicaClientMain.py` is the main program running on the computer, serving as the entry point 
@@ -26,3 +28,5 @@ physically executing moves on the board.
 
 ![System Diagram](diagram.png)
 
+## Final Setup
+![Final Setup](final_setup.png)
