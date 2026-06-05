@@ -14,8 +14,7 @@ positions on the board.
 - **Mover** contains the PLC program and Universal Robots script responsible for 
 physically executing moves on the board.
 
-> **Demo Video:** [Watch on YouTube](https://youtube.com/shorts/8n06mbnDMAk?feature=share)
-
+> **Demo Video:** [Watch on YouTube](https://youtu.be/VDj9hcz8Fek)
 ---
 
 ## Project Poster
